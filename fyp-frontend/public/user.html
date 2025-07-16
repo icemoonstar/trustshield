@@ -110,69 +110,77 @@
     </table>
   </div>
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
-      authDomain: "firm-source-440003-a8.firebaseapp.com",
-      projectId: "firm-source-440003-a8"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
+    authDomain: "firm-source-440003-a8.firebaseapp.com",
+    projectId: "firm-source-440003-a8"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    let allLogs = [];
+  let allLogs = [];
 
-    onAuthStateChanged(auth, user => {
-      if (!user) return location.href = 'login.html';
-      loadMyLogs(user.email);
-    });
+  onAuthStateChanged(auth, user => {
+    if (!user) return location.href = 'login.html';
+    loadMyLogs(user.email);
+  });
 
-    async function loadMyLogs(email) {
-      const logsRef = collection(db, 'logs');
-      const q = query(logsRef, where('email', '==', email));
-      const snapshot = await getDocs(q);
-      allLogs = [];
-      snapshot.forEach(doc => allLogs.push(doc.data()));
-      filterAndDisplayLogs();
-    }
+  async function loadMyLogs(email) {
+    const logsRef = collection(db, 'logs');
+    const q = query(logsRef, where('email', '==', email), orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
 
-    function filterAndDisplayLogs() {
-      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
-      const dateValue = document.getElementById("dateInput").value;
+    allLogs = snapshot.docs.map(doc => ({
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toDate() || new Date(0)
+    }));
 
-      const filtered = allLogs.filter(log => {
+    filterAndDisplayLogs();
+  }
+
+  function filterAndDisplayLogs() {
+    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+    const dateValue = document.getElementById("dateInput").value;
+
+    const filtered = allLogs
+      .filter(log => {
         const matchesKeyword =
           (log.ip || '').toLowerCase().includes(keyword) ||
           (log.result || '').toLowerCase().includes(keyword);
 
-        if (!log.timestamp?.toDate) return false;
-        const dateStr = log.timestamp.toDate().toISOString().slice(0, 10);
+        const ts = log.timestamp;
+        if (!ts) return false;
+
+        const dateStr = ts.toISOString().slice(0, 10);
         const matchesDate = !dateValue || dateStr === dateValue;
 
         return matchesKeyword && matchesDate;
-      });
+      })
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
-      const topLogs = filtered.slice(0, 10);
-      const table = document.querySelector('#logTable tbody');
-      table.innerHTML = '';
-      topLogs.forEach(data => {
-        const ts = data.timestamp?.toDate?.();
-        const timeStr = ts ? ts.toLocaleString() : 'Invalid Timestamp';
-        table.innerHTML += `<tr><td>${timeStr}</td><td>${data.ip}</td><td>${data.result}</td></tr>`;
-      });
-    }
-
-    document.getElementById("searchInput").addEventListener("input", filterAndDisplayLogs);
-    document.getElementById("dateInput").addEventListener("change", filterAndDisplayLogs);
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth).then(() => location.href = 'login.html');
+    const topLogs = filtered.slice(0, 20);
+    const table = document.querySelector('#logTable tbody');
+    table.innerHTML = '';
+    topLogs.forEach(data => {
+      const ts = data.timestamp;
+      const timeStr = ts ? ts.toLocaleString() : 'Invalid Timestamp';
+      table.innerHTML += `<tr><td>${timeStr}</td><td>${data.ip}</td><td>${data.result}</td></tr>`;
     });
-  </script>
+  }
+
+  document.getElementById("searchInput").addEventListener("input", filterAndDisplayLogs);
+  document.getElementById("dateInput").addEventListener("change", filterAndDisplayLogs);
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    signOut(auth).then(() => location.href = 'login.html');
+  });
+</script>
 </body>
 </html>

@@ -3,7 +3,9 @@ const express = require('express');[]
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-
+const getClientIP = (req) => {
+  return req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+};
 const app = express();
 const PORT = 4000;
 
@@ -28,14 +30,20 @@ const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 // Endpoint to receive and store access logs
 app.post('/logs', async (req, res) => {
   try {
-    const { email, ip, result } = req.body;
+    let { email, ip, result } = req.body;
+
+    if (!ip || ip === 'unknown') {
+      ip = getClientIP(req);
+    }
+
     const log = new AccessLog({ email, ip, result });
     await log.save();
-    res.status(201).json({ message: 'Log saved' });
+    res.status(201).json({ message: 'Log saved', ipUsed: ip });
   } catch (err) {
     res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
+
 
 // Endpoint to retrieve all access logs
 app.get('/logs', async (req, res) => {

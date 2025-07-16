@@ -75,15 +75,16 @@
     th {
       background-color: #f0f0f0;
     }
-    canvas {
-      max-width: 200px;
-      margin: 10px auto 20px auto;
-      display: block;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      background-color: #fff;
-    }
+  canvas {
+    max-width: 250px;
+    margin: 10px auto 20px auto;
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+  }
+
   </style>
 </head>
 <body>
@@ -117,9 +118,15 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    orderBy
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
@@ -148,9 +155,10 @@
       allUsers = snapshot.docs.map(doc => doc.data());
       renderUsers();
     }
-
+    
     async function loadLogs() {
-      const snapshot = await getDocs(collection(db, 'logs'));
+      const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
       allLogs = snapshot.docs.map(doc => doc.data());
       renderLogs();
       renderChart();
@@ -188,18 +196,18 @@
         });
     }
 
-    function renderChart() {
-      const resultCounts = { success: 0, failure: 0 };
+        function renderChart() {
+      const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
       allLogs.forEach(log => {
         const result = (log.result || '').toLowerCase();
         if (result === 'success') resultCounts.success++;
-        else if (result === 'failure') resultCounts.failure++;
+        else if (result === 'failed') resultCounts.failed++; // <- match actual data
       });
 
       const chartData = {
-        labels: ['Success', 'Failure'],
+        labels: ['Success', 'Failed'],  // <- update label
         datasets: [{
-          data: [resultCounts.success, resultCounts.failure],
+          data: [resultCounts.success, resultCounts.failed],  // <- match key
           backgroundColor: ['#4caf50', '#e53935']
         }]
       };
@@ -221,6 +229,7 @@
         });
       }
     }
+
 
     document.getElementById("userSearchInput").addEventListener("input", renderUsers);
     document.getElementById("logSearchEmail").addEventListener("input", renderLogs);

@@ -68,10 +68,15 @@
       transform: translateY(-2px);
     }
 
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      min-width: 600px; /* 防止在小屏时压扁 */
       font-size: 15px;
       border: 1px solid #ccc;
     }
@@ -90,6 +95,19 @@
 
     #searchInput { width: 50%; }
     #dateInput { margin-right: 15px; }
+
+    @media screen and (max-width: 600px) {
+      #searchInput, #dateInput {
+        width: 100%;
+        margin-right: 0;
+      }
+
+      button {
+        float: none;
+        width: 100%;
+        margin-top: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -104,10 +122,12 @@
     <input type="text" id="searchInput" placeholder="e.g. 127.0.0.1 or success" />
 
     <h2>My Access Logs</h2>
-    <table id="logTable">
-      <thead><tr><th>Time</th><th>IP</th><th>Result</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-container">
+      <table id="logTable">
+        <thead><tr><th>Time</th><th>IP</th><th>Result</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
 <script type="module">

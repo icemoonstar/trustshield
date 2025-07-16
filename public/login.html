@@ -152,7 +152,7 @@
     <label><input type="checkbox" id="rememberDevice"> Remember this device</label><br>
     <button id="loginBtn">Login</button>
     <p><a href="#" onclick="toggleReset()">Forgot password?</a></p>
-    <p>Don't have an account? <a href="index.html">Register here</a></p>
+    <p>Don't have an account? <a href="register.html">Register here</a></p>
 
     <!-- Reset password section -->
     <div id="reset-section">
@@ -174,7 +174,6 @@
     </div>
 
     <p id="status"></p>
-
     <!-- Firebase SDK + Lightweight Browser-Compatible TOTP -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -190,7 +189,8 @@
         updateDoc,
         addDoc,
         collection,
-        serverTimestamp
+        serverTimestamp,
+        arrayUnion
       } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
       const firebaseConfig = {
@@ -265,7 +265,7 @@
           const email = document.getElementById("email").value;
           const password = document.getElementById("password").value;
           const remember = document.getElementById("rememberDevice").checked;
-
+          const currentIP = await getUserIP();
           try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
             const user = cred.user;
@@ -277,6 +277,16 @@
             if (!userDoc.exists()) return setStatus("❌ User role not found.");
 
             const userData = userDoc.data();
+            const currentIP = await getUserIP();
+            const knownIPs = userData.knownIPs || [];
+           // console.log("✅ Scucess", userDoc.data().role);
+           // redirectToDashboard(userDoc.data().role || "user");
+            
+
+            if (knownIPs.includes(currentIP)) {
+              await logAccess(user.email, 'success');
+              return redirectToDashboard(userData.role);
+            }
 
             if (localStorage.getItem(`remember_${user.uid}`) === "yes") {
               await logAccess(user.email, 'success');
@@ -284,6 +294,16 @@
             }
 
             if (!userData.totpSecret) {
+             async function getUserIP() {
+            try {
+              const res = await fetch('https://ipv4.icanhazip.com/');
+              const ip = await res.text();
+              return ip.trim(); 
+            } catch (e) {
+              return 'unknown';
+            }
+          }
+
               totpSecret = generateSecret();
               const otpauth = getOtpAuthUrl(user.email, totpSecret);
               document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(otpauth)}`;
@@ -293,7 +313,8 @@
               qrDisplayed = true;
               setTimeout(() => {
                 if (qrDisplayed) document.getElementById("totp-setup").style.display = 'none';
-              }, 15000);
+              }, 15000);   
+              await logAccess(user.email, 'waiting');
               setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Enter or click Verify.");
               return;
             }
@@ -312,15 +333,37 @@
           }
         }
 
-       async function logAccess(email, result) {
+        async function logAccess(email, result) {
         const ip = await getUserIP();
+
+
         await addDoc(collection(db, 'logs'), {
           email,
           ip,
           result,
           timestamp: serverTimestamp()
         });
+
+
+        try {
+          await fetch('https://fyp-1-xbt3.onrender.com/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, ip, result })
+          });
+        } catch (err) {
+          console.error('❌ MongoDB failed:', err);
+        }
       }
+      
+      async function sendLogToMongo(email, ip, result) {
+      const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
+      await fetch(apiURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, ip, result })
+      });
+}
 
       async function verifyTotp() {
         const code = document.getElementById("totpCode").value.trim();
@@ -335,12 +378,23 @@
           await updateDoc(docRef, { totpSecret });
         }
 
-        if (document.getElementById("rememberDevice").checked) {
-          localStorage.setItem(`remember_${tempUser.uid}`, "yes");
-        }
+       if (document.getElementById("rememberDevice").checked) {
+        const ip = await getUserIP();
+
+        localStorage.setItem(`remember_${tempUser.uid}`, "yes");
+
+        const docRef = doc(db, "users", tempUser.uid);
+        await updateDoc(docRef, {
+          knownIPs: arrayUnion(ip)
+        });
+      }
+
 
         await logAccess(tempUser.email, 'success');
         redirectToDashboard(userDoc.data().role || "user");
+        console.log("✅ Scucess", userDoc.data().role);
+        redirectToDashboard(userDoc.data().role || "user");
+
       }
 
       function redirectToDashboard(role) {

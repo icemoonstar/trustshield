@@ -62,9 +62,13 @@
     button:hover {
       background: #111a3d;
     }
+    .table-container {
+      overflow-x: auto;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 600px;
       margin-bottom: 20px;
     }
     th, td {
@@ -75,16 +79,26 @@
     th {
       background-color: #f0f0f0;
     }
-  canvas {
-    max-width: 250px;
-    margin: 10px auto 20px auto;
-    display: block;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px;
-    background-color: #fff;
-  }
+    canvas {
+      max-width: 250px;
+      margin: 10px auto 20px auto;
+      display: block;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #fff;
+    }
 
+    @media screen and (max-width: 600px) {
+      button {
+        width: 100%;
+        float: none;
+      }
+      .search-bar input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -97,10 +111,12 @@
       <div class="search-bar">
         <input type="text" id="userSearchInput" placeholder="Search user by email..." />
       </div>
-      <table id="userTable">
-        <thead><tr><th>Email</th><th>Role</th><th>Known IPs</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-container">
+        <table id="userTable">
+          <thead><tr><th>Email</th><th>Role</th><th>Known IPs</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="section">
@@ -110,13 +126,14 @@
         <input type="date" id="logSearchDate" />
       </div>
       <canvas id="logChart"></canvas>
-      <table id="logTable">
-        <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-container">
+        <table id="logTable">
+          <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
-
   <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';

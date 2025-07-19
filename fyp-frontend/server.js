@@ -9,6 +9,16 @@ const PORT = 4000;
 
 app.use(cors());
 app.use(bodyParser.json());
+//==============
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json'); 
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const firestore = admin.firestore();
+
 
 // ======= MongoDB Setup =======
 const mongoURI = 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
@@ -37,13 +47,25 @@ app.post('/logs', async (req, res) => {
   try {
     const { email, result } = req.body;
     const ip = getClientIp(req);
+    const timestamp = new Date();
 
-    const log = new AccessLog({ email, ip, result });
-    await log.save();
+    // MongoDB 写入
+    const mongoLog = new AccessLog({ email, ip, result, timestamp });
+    await mongoLog.save();
 
-    console.log('✅ Logged:', log);
-    res.status(201).json({ message: 'Log saved', ip });
+    // Firestore 写入
+    await firestore.collection('logs').add({
+      email,
+      ip,
+      result,
+      timestamp: admin.firestore.Timestamp.fromDate(timestamp)
+    });
+
+    console.log('✅ Logged to MongoDB & Firestore');
+    res.status(201).json({ message: 'Log saved to both DBs', ip });
+
   } catch (err) {
+    console.error('❌ Logging failed:', err);
     res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
@@ -63,19 +85,4 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ FYP Server running on http://localhost:${PORT}`);
-});
-
-app.post('/save-known-ip', async (req, res) => {
-  const { email, ip } = req.body;
-  if (!email || !ip) return res.status(400).json({ error: 'Missing email or IP' });
-
-  try {
-    const existing = await KnownIP.findOne({ email, ip });
-    if (!existing) {
-      await KnownIP.create({ email, ip });
-    }
-    res.status(200).json({ message: 'Known IP saved' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
 });

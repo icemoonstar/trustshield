@@ -215,7 +215,7 @@
         if (e.key === "Enter") await verifyTotp();
       });
 
-      /*async function getUserIP() {
+      async function getUserIP() {
         try {
           const res = await fetch('https://api.ipify.org?format=json');
           const data = await res.json();
@@ -223,11 +223,11 @@
         } catch (e) {
           return 'unknown';
         }
-      }*/
+      }
       function generateSecret() {
       const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
       let secret = '';
-      for (let i = 0; i < 16; i++) { // 改成 16 位
+      for (let i = 0; i < 16; i++) { 
         secret += charset.charAt(Math.floor(Math.random() * charset.length));
       }
       return secret;
@@ -264,7 +264,7 @@
           const email = document.getElementById("email").value;
           const password = document.getElementById("password").value;
           const remember = document.getElementById("rememberDevice").checked;
-          //const currentIP = await getUserIP();
+          const currentIP = await getUserIP();
           console.log("📱 currentIP =", currentIP)
           try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -314,48 +314,48 @@
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
           } catch (err) {
-            const email = document.getElementById("email").value;
-            //const ip = await getUserIP();
-            await logAccess(email, 'failed');
-            setStatus("❌ " + err.message);
-          }
+          const email = document.getElementById("email").value;
+          const ip = await getUserIP();
+          console.error("🔥 Login failed:", err.message);
+          console.log("📥 Logging failure attempt | Email:", email, "| IP:", ip);
+          await logAccess(email, 'failed');
+          setStatus("❌ " + err.message);
+         }
         }
           async function logAccess(email, result) {
-                try {
-                  const ip = await getUserIP(); 
-                  const res = await fetch('https://fyp-1-xbt3.onrender.com/logs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, result}) 
-                  });
+          console.log(`📤 logAccess() called: email=${email}, result=${result}`);
+          try {
+            const ip = await getUserIP();
 
-                  const data = await res.json();
+            await addDoc(collection(db, 'logs'), {
+              email,
+              ip,
+              result,
+              timestamp: serverTimestamp()
+            });
+            console.log("✅ Logged to Firestore:", { email, ip, result });
 
-                  if (ip && ip !== 'unknown') {
-                    await addDoc(collection(db, 'logs'), {
-                      email,
-                      ip,
-                      result,
-                      timestamp: serverTimestamp()
-                    });
-                    console.log("✅ Logged with IP:", ip);
-                  } else {
-                    console.warn("⚠️ No valid IP to log:", ip);
-                  }
-                } catch (err) {
-                  console.error("❌ Log failed:", err);
-                }
-              }
+            await fetch('http://localhost:4000/logs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, ip, result })
+            });
+            console.log("✅ Logged to MongoDB:", { email, ip, result });
 
-      async function sendLogToMongo(email, ip, result) {
-      const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
-      await fetch(apiURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ip, result })
-      });
-    }
-
+          } catch (err) {
+            console.error("❌ logAccess failed:", err);
+          }
+        }
+        const ip = await getPublicIP();
+          await fetch('http://localhost:4000/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user.email,
+              result: 'success',
+              ip: ip 
+            })
+          });
       async function verifyTotp() {
         const code = document.getElementById("totpCode").value.trim();
         if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");

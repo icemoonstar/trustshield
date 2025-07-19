@@ -4,7 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-app.set('trust proxy', true); // ⭐ 添加
+app.set('trust proxy', true); 
 const PORT = 4000;
 
 app.use(cors());
@@ -49,11 +49,11 @@ app.post('/logs', async (req, res) => {
     const ip = getClientIp(req);
     const timestamp = new Date();
 
-    // MongoDB 写入
+   
     const mongoLog = new AccessLog({ email, ip, result, timestamp });
     await mongoLog.save();
 
-    // Firestore 写入
+    
     await firestore.collection('logs').add({
       email,
       ip,

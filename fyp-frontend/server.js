@@ -86,3 +86,9 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ FYP Server running on http://localhost:${PORT}`);
 });
+
+require('dotenv').config();
+
+const MONGODB_URI = process.env.MONGODB_URI;
+const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+const TOTP_SECRET_KEY = process.env.TOTP_SECRET_KEY;

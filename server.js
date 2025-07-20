@@ -1,28 +1,29 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const admin = require('firebase-admin');
 
 const app = express();
 app.set('trust proxy', true); 
-const PORT = 4000;
 
+// ======= Middleware =======
 app.use(cors());
 app.use(bodyParser.json());
-//==============
-const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json'); 
 
+// ======= Load ENV =======
+const MONGODB_URI = process.env.MONGODB_URI;
+const FIREBASE_CONFIG = JSON.parse(process.env.FIREBASE_CONFIG); 
+
+// ======= Firebase Setup =======
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(FIREBASE_CONFIG),
 });
-
 const firestore = admin.firestore();
 
-
 // ======= MongoDB Setup =======
-const mongoURI = process.env.MONGO_URI;
-mongoose.connect(mongoURI)
+mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
@@ -35,7 +36,7 @@ const accessLogSchema = new mongoose.Schema({
 });
 const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 
-// ======= IP Helper =======
+// ======= Helper: Get Client IP =======
 const getClientIp = (req) =>
   req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
   req.socket?.remoteAddress ||
@@ -49,11 +50,11 @@ app.post('/logs', async (req, res) => {
     const ip = getClientIp(req);
     const timestamp = new Date();
 
-   
+    // Save to MongoDB
     const mongoLog = new AccessLog({ email, ip, result, timestamp });
     await mongoLog.save();
 
-    
+    // Save to Firestore
     await firestore.collection('logs').add({
       email,
       ip,
@@ -61,7 +62,7 @@ app.post('/logs', async (req, res) => {
       timestamp: admin.firestore.Timestamp.fromDate(timestamp)
     });
 
-    console.log('✅ Logged to MongoDB & Firestore');
+    console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
     res.status(201).json({ message: 'Log saved to both DBs', ip });
 
   } catch (err) {
@@ -86,9 +87,3 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ FYP Server running on http://localhost:${PORT}`);
 });
-
-require('dotenv').config();
-
-const MONGODB_URI = process.env.MONGODB_URI;
-const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
-const TOTP_SECRET_KEY = process.env.TOTP_SECRET_KEY;

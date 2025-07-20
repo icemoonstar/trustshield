@@ -28,19 +28,29 @@ const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 // Endpoint to receive and store access logs
 app.post('/logs', async (req, res) => {
   try {
+    const { email, result } = req.body;
+    const ip = getClientIp(req);
+    const timestamp = new Date();
 
-    const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
+    // Save to MongoDB
+    const mongoLog = new AccessLog({ email, ip, result, timestamp });
+    await mongoLog.save();
 
-    const { email, result } = req.body; 
-    const log = new AccessLog({ email, ip: clientIP, result });
+    // Save to Firestore
+    await firestore.collection('logs').add({
+      email,
+      ip,
+      result,
+      timestamp: admin.firestore.Timestamp.fromDate(timestamp)
+    });
 
-    await log.save();
-    res.status(201).json({ message: 'Log saved' });
+    console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
+    res.status(201).json({ message: 'Log saved to both DBs', ip });
   } catch (err) {
+    console.error('❌ Logging failed:', err);
     res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
-
 
 // Endpoint to retrieve all access logs
 app.get('/logs', async (req, res) => {

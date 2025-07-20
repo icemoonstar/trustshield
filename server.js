@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 require('dotenv').config();
+=======
+>>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+<<<<<<< HEAD
 const admin = require('firebase-admin');
 
 const app = express();
@@ -24,6 +28,29 @@ const firestore = admin.firestore();
 
 // ======= MongoDB Setup =======
 mongoose.connect(MONGODB_URI)
+=======
+
+const app = express();
+app.set('trust proxy', true); 
+const PORT = 4000;
+
+app.use(cors());
+app.use(bodyParser.json());
+//==============
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json'); 
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const firestore = admin.firestore();
+
+
+// ======= MongoDB Setup =======
+const mongoURI = 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoURI)
+>>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
@@ -36,7 +63,11 @@ const accessLogSchema = new mongoose.Schema({
 });
 const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 
+<<<<<<< HEAD
 // ======= Helper: Get Client IP =======
+=======
+// ======= IP Helper =======
+>>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
 const getClientIp = (req) =>
   req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
   req.socket?.remoteAddress ||
@@ -50,11 +81,19 @@ app.post('/logs', async (req, res) => {
     const ip = getClientIp(req);
     const timestamp = new Date();
 
+<<<<<<< HEAD
     // Save to MongoDB
     const mongoLog = new AccessLog({ email, ip, result, timestamp });
     await mongoLog.save();
 
     // Save to Firestore
+=======
+   
+    const mongoLog = new AccessLog({ email, ip, result, timestamp });
+    await mongoLog.save();
+
+    
+>>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
     await firestore.collection('logs').add({
       email,
       ip,
@@ -62,7 +101,11 @@ app.post('/logs', async (req, res) => {
       timestamp: admin.firestore.Timestamp.fromDate(timestamp)
     });
 
+<<<<<<< HEAD
     console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
+=======
+    console.log('✅ Logged to MongoDB & Firestore');
+>>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
     res.status(201).json({ message: 'Log saved to both DBs', ip });
 
   } catch (err) {

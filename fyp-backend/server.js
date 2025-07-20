@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
+require('dotenv').config();
+
+const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
 
 const app = express();
 app.set('trust proxy', true); 

@@ -300,9 +300,6 @@
               document.getElementById("totp-section").style.display = 'block';
               tempUser = user;
               qrDisplayed = true;
-              setTimeout(() => {
-                if (qrDisplayed) document.getElementById("totp-setup").style.display = 'none';
-              }, 15000);   
               await logAccess(user.email, 'waiting');
               setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Enter or click Verify.");
               return;
@@ -314,7 +311,6 @@
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
           } catch (err) {
-          const email = document.getElementById("email").value;
           const ip = await getUserIP();
           console.error("🔥 Login failed:", err.message);
           console.log("📥 Logging failure attempt | Email:", email, "| IP:", ip);
@@ -335,7 +331,7 @@
             });
             console.log("✅ Logged to Firestore:", { email, ip, result });
 
-            await fetch('https://trustshield.onrender.com/log', {
+            await fetch('https://trustshield.onrender.com/logs', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email, ip, result })
@@ -360,7 +356,7 @@
         }
 
        if (document.getElementById("rememberDevice").checked) {
-        const ip = ""; 
+        const ip = await getUserIP(); 
 
         localStorage.setItem(`remember_${tempUser.uid}`, "yes");
         const docRef = doc(db, "users", tempUser.uid);

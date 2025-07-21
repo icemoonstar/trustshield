@@ -213,7 +213,7 @@
     
     async function loadLogs() {
       try {
-        const res = await fetch('https://trustshield.onrender.com/log');
+        const res = await fetch('https://trustshield.onrender.com/logs');
         const data = await res.json();
 
         allLogs = data.map(log => ({

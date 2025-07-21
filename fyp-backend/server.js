@@ -75,7 +75,7 @@ app.post('/logs', async (req, res) => {
 
 app.get('/logs', async (req, res) => {
   try {
-    onst logs = await Log.find().sort({ timestamp: -1 }).limit(50);
+    const logs = await AccessLog.find().sort({ timestamp: -1 }).limit(50);
     res.json(logs);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving logs', error: err });

@@ -360,7 +360,7 @@
         }
 
        if (document.getElementById("rememberDevice").checked) {
-        const ip = await getUserIP();
+        const ip = ""; 
 
         localStorage.setItem(`remember_${tempUser.uid}`, "yes");
         const docRef = doc(db, "users", tempUser.uid);

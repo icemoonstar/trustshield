@@ -335,7 +335,7 @@
             });
             console.log("✅ Logged to Firestore:", { email, ip, result });
 
-            await fetch('http://localhost:4000/logs', {
+            await fetch('https://trustshield.onrender.com/log', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email, ip, result })
@@ -346,16 +346,6 @@
             console.error("❌ logAccess failed:", err);
           }
         }
-        const ip = await getPublicIP();
-          await fetch('http://localhost:4000/logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: user.email,
-              result: 'success',
-              ip: ip 
-            })
-          });
       async function verifyTotp() {
         const code = document.getElementById("totpCode").value.trim();
         if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");

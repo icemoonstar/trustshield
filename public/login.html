@@ -335,7 +335,7 @@
             });
             console.log("✅ Logged to Firestore:", { email, ip, result });
 
-            await fetch('http://localhost:4000/logs', {
+            await fetch('https://trustshield.onrender.com/log', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email, ip, result })

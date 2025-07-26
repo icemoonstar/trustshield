@@ -142,7 +142,11 @@
 <body>
   <div class="dashboard">
     <button id="logoutBtn">Logout</button>
+<<<<<<< HEAD
     <h1>Admin Dashboard</h1>
+=======
+    <h1>Admin Dashboard fffffff</h1>
+>>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
 
     <div class="section">
       <h2>All Users</h2>
@@ -166,7 +170,11 @@
       <div class="table-container">
         <table id="logTable">
           <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
+<<<<<<< HEAD
           <tbody id="logTableBody"></tbody>
+=======
+          <tbody></tbody>
+>>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
         </table>
       </div>
     </div>
@@ -212,6 +220,7 @@
     }
     
     async function loadLogs() {
+<<<<<<< HEAD
       try {
         const res = await fetch('https://trustshield.onrender.com/logs');
         const data = await res.json();
@@ -284,6 +293,47 @@
         logTable.appendChild(row);
       });
     }
+=======
+      const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
+      allLogs = snapshot.docs.map(doc => doc.data());
+      renderLogs();
+      renderChart();
+    }
+
+    function renderUsers() {
+      const keyword = document.getElementById("userSearchInput").value.toLowerCase();
+      const table = document.querySelector('#userTable tbody');
+      table.innerHTML = '';
+      allUsers
+        .filter(user => (user.email || '').toLowerCase().includes(keyword))
+        .forEach(data => {
+          const row = `<tr><td>${data.email}</td><td>${data.role}</td><td>${(data.knownIps || []).join('<br>')}</td></tr>`;
+          table.innerHTML += row;
+        });
+    }
+
+    function renderLogs() {
+      const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
+      const dateFilter = document.getElementById("logSearchDate").value;
+      const table = document.querySelector('#logTable tbody');
+      table.innerHTML = '';
+      allLogs
+        .filter(log => {
+          const matchEmail = (log.email || '').toLowerCase().includes(emailKeyword);
+          const ts = log.timestamp?.toDate?.();
+          const matchDate = !dateFilter || (ts && ts.toISOString().slice(0, 10) === dateFilter);
+          return matchEmail && matchDate;
+        })
+        .forEach(data => {
+          const ts = data.timestamp?.toDate?.();
+          const timeStr = ts ? ts.toLocaleString() : 'Invalid Timestamp';
+          const row = `<tr><td>${timeStr}</td><td>${data.email}</td><td>${data.ip}</td><td>${data.result}</td></tr>`;
+          table.innerHTML += row;
+        });
+    }
+
+>>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
       allLogs.forEach(log => {
@@ -320,6 +370,7 @@
 
 
     document.getElementById("userSearchInput").addEventListener("input", renderUsers);
+<<<<<<< HEAD
     document.getElementById("logSearchEmail").addEventListener("input", () => {
   renderLogs();
   renderChart();  
@@ -328,6 +379,10 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
   renderLogs();
   renderChart();  
     });
+=======
+    document.getElementById("logSearchEmail").addEventListener("input", renderLogs);
+    document.getElementById("logSearchDate").addEventListener("change", renderLogs);
+>>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
     });

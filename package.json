@@ -1,9 +1,23 @@
 {
-<<<<<<< HEAD
-<<<<<<< HEAD
   "name": "fyp-frontend",
   "version": "1.0.0",
   "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icemoonstar/fyp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/icemoonstar/fyp/issues"
+  },
+  "homepage": "https://github.com/icemoonstar/fyp#readme",
+  "description": "",
   "dependencies": {
     "abort-controller": "^3.0.0",
     "accepts": "^2.0.0",
@@ -183,46 +197,5 @@
     "yargs": "^17.7.2",
     "yargs-parser": "^21.1.1",
     "yocto-queue": "^0.1.0"
-  },
-=======
-  "name": "fyp-folder",
-  "version": "1.0.0",
-  "main": "server.js",
->>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-<<<<<<< HEAD
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/icemoonstar/fyp.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/icemoonstar/fyp/issues"
-  },
-  "homepage": "https://github.com/icemoonstar/fyp#readme",
-  "description": ""
-=======
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "body-parser": "^2.2.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "firebase-admin": "^13.4.0",
-    "mongoose": "^8.16.0"
   }
->>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
-=======
-  "dependencies": {
-    "dotenv": "^17.2.0",
-    "firebase-admin": "^13.4.0"
-  }
->>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
 }

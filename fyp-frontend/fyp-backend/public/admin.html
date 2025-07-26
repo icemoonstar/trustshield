@@ -142,11 +142,7 @@
 <body>
   <div class="dashboard">
     <button id="logoutBtn">Logout</button>
-<<<<<<< HEAD
-    <h1>Admin Dashboard</h1>
-=======
     <h1>Admin Dashboard fffffff</h1>
->>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
 
     <div class="section">
       <h2>All Users</h2>
@@ -170,11 +166,7 @@
       <div class="table-container">
         <table id="logTable">
           <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
-<<<<<<< HEAD
-          <tbody id="logTableBody"></tbody>
-=======
           <tbody></tbody>
->>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
         </table>
       </div>
     </div>
@@ -220,80 +212,6 @@
     }
     
     async function loadLogs() {
-<<<<<<< HEAD
-      try {
-        const res = await fetch('https://trustshield.onrender.com/logs');
-        const data = await res.json();
-
-        allLogs = data.map(log => ({
-          ...log,
-          timestamp: new Date(log.timestamp)
-        }));
-
-        renderLogs();
-        renderChart();
-      } catch (err) {
-        console.error('❌ Failed to load logs from MongoDB:', err);
-      }
-    }
-
-
-    function renderUsers() {
-    const keyword = document.getElementById("userSearchInput").value.toLowerCase();
-    const table = document.querySelector('#userTable tbody');
-    table.innerHTML = '';
-    allUsers
-      .filter(user => (user.email || '').toLowerCase().includes(keyword))
-      .forEach(data => {
-        const ips = (data.knownIPs || []).map(ip => `<a href="https://ipinfo.io/${ip}" target="_blank">${ip}</a>`).join('<br>') || '—';
-        const row = `<tr><td>${data.email}</td><td>${data.role}</td><td>${ips}</td></tr>`;
-        table.innerHTML += row;
-      });
-    }
-
-    function renderLogs() {
-      const logTable = document.getElementById("logTableBody");
-      logTable.innerHTML = "";
-
-      const logSearchInput = document.getElementById("logSearchEmail").value.trim().toLowerCase();
-      const logSearchDate = document.getElementById("logSearchDate").value;
-
-      const filteredLogs = allLogs.filter(log => {
-        const matchEmail = log.email?.toLowerCase().includes(logSearchInput);
-        let matchDate = true;
-
-        if (logSearchDate) {
-          const selectedDate = new Date(logSearchDate);
-          const ts = log.timestamp?.seconds
-            ? new Date(log.timestamp.seconds * 1000)
-            : new Date(log.timestamp);
-          matchDate =
-            ts.getDate() === selectedDate.getDate() &&
-            ts.getMonth() === selectedDate.getMonth() &&
-            ts.getFullYear() === selectedDate.getFullYear();
-        }
-
-        return matchEmail && matchDate;
-      });
-
-      filteredLogs.forEach(log => {
-        const row = document.createElement("tr");
-
-        const ts = log.timestamp?.seconds
-          ? new Date(log.timestamp.seconds * 1000)
-          : new Date(log.timestamp);
-
-        row.innerHTML = `
-          <td>${ts.toLocaleString()}</td>
-          <td>${log.email || "N/A"}</td>
-          <td>${log.ip || "N/A"}</td>
-          <td>${log.result || "N/A"}</td>
-        `;
-
-        logTable.appendChild(row);
-      });
-    }
-=======
       const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
       const snapshot = await getDocs(q);
       allLogs = snapshot.docs.map(doc => doc.data());
@@ -333,7 +251,6 @@
         });
     }
 
->>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
       allLogs.forEach(log => {
@@ -370,19 +287,8 @@
 
 
     document.getElementById("userSearchInput").addEventListener("input", renderUsers);
-<<<<<<< HEAD
-    document.getElementById("logSearchEmail").addEventListener("input", () => {
-  renderLogs();
-  renderChart();  
-    });
-document.getElementById("logSearchDate").addEventListener("change", () => {
-  renderLogs();
-  renderChart();  
-    });
-=======
     document.getElementById("logSearchEmail").addEventListener("input", renderLogs);
     document.getElementById("logSearchDate").addEventListener("change", renderLogs);
->>>>>>> 878f42e3f6aa56c690a916db6078f555d608433f
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
     });

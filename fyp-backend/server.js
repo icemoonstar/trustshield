@@ -28,14 +28,19 @@ const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 // Endpoint to receive and store access logs
 app.post('/logs', async (req, res) => {
   try {
-    const { email, ip, result } = req.body;
-    const log = new AccessLog({ email, ip, result });
+
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
+
+    const { email, result } = req.body; 
+    const log = new AccessLog({ email, ip: clientIP, result });
+
     await log.save();
     res.status(201).json({ message: 'Log saved' });
   } catch (err) {
     res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
+
 
 // Endpoint to retrieve all access logs
 app.get('/logs', async (req, res) => {

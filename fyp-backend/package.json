@@ -13,16 +13,11 @@
   "dependencies": {
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
-<<<<<<< HEAD
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
     "mongodb": "^6.18.0",
     "mongoose": "^8.16.0",
     "pg": "^8.16.3"
-=======
-    "express": "^5.1.0",
-    "mongoose": "^8.16.0"
->>>>>>> b7601d9 (00000)
   }
 }

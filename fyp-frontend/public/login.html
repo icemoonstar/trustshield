@@ -297,23 +297,27 @@
           }
         }
 
-        async function logAccess(email, result) {
+       async function logAccess(email, result) {
         console.log(`📤 logAccess() called: email=${email}, result=${result}`);
         try {
+          const response = await fetch("https://trustshield.onrender.com/get-ip");
+          const { ip } = await response.json();
+
           await addDoc(collection(db, 'logs'), {
             email,
-            ip: "logged by server",
+            ip: ip || "unknown",
             result,
             timestamp: serverTimestamp()
           });
-          console.log("✅ Logged to Firestore:", { email, result });
-
+          console.log("✅ Logged to Firestore:", { email, ip, result });
           await fetch('https://trustshield.onrender.com/logs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, result }) 
+            body: JSON.stringify({ email, ip, result })
           });
-          console.log("✅ Logged to MongoDB:", { email, result });
+          console.log("✅ Logged to MongoDB:", { email, ip, result });
+
+          window._lastLoginIP = ip;
 
         } catch (err) {
           console.error("❌ logAccess failed:", err);
@@ -337,7 +341,7 @@
         localStorage.setItem(`remember_${tempUser.uid}`, "yes");
         const docRef = doc(db, "users", tempUser.uid);
         await updateDoc(docRef, {
-          knownIPs: arrayUnion(ip)
+          knownIPs: arrayUnion(window._lastLoginIP || "unknown")
         });
       }
 

@@ -215,15 +215,14 @@
         if (e.key === "Enter") await verifyTotp();
       });
 
-      async function getUserIP() {
-        try {
-          const res = await fetch('https://api.ipify.org?format=json');
-          const data = await res.json();
-          return data.ip;
-        } catch (e) {
-          return 'unknown';
-        }
-      }
+    await addDoc(collection(db, 'logs'), {
+        email,
+        result,
+        timestamp: serverTimestamp()
+      });
+
+
+
       function generateSecret() {
       const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
       let secret = '';
@@ -264,7 +263,6 @@
           const email = document.getElementById("email").value;
           const password = document.getElementById("password").value;
           const remember = document.getElementById("rememberDevice").checked;
-          const currentIP = await getUserIP();
           console.log("📱 currentIP =", currentIP)
           try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -277,7 +275,6 @@
             if (!userDoc.exists()) return setStatus("❌ User role not found.");
 
             const userData = userDoc.data();
-            const currentIP = await getUserIP();
             const knownIPs = userData.knownIPs || [];
            // console.log("✅ Scucess", userDoc.data().role);
            // redirectToDashboard(userDoc.data().role || "user");
@@ -311,7 +308,6 @@
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
           } catch (err) {
-          const ip = await getUserIP();
           console.error("🔥 Login failed:", err.message);
           console.log("📥 Logging failure attempt | Email:", email, "| IP:", ip);
           await logAccess(email, 'failed');
@@ -319,30 +315,27 @@
          }
         }
         async function logAccess(email, result) {
-          console.log(`📤 logAccess() called: email=${email}, result=${result}`);
-          try {
+        console.log(`📤 logAccess() called: email=${email}, result=${result}`);
+        try {
+          await addDoc(collection(db, 'logs'), {
+            email,
+            ip: "logged by server",
+            result,
+            timestamp: serverTimestamp()
+          });
+          console.log("✅ Logged to Firestore:", { email, result });
 
-            await addDoc(collection(db, 'logs'), {
-              email,
-              ip: "logged by server",
-              result,
-              timestamp: serverTimestamp()
-            });
-            console.log("✅ Logged to Firestore:", { email, result });
+          await fetch('https://trustshield.onrender.com/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, result }) 
+          });
+          console.log("✅ Logged to MongoDB:", { email, result });
 
-  
-            await fetch('https://trustshield.onrender.com/logs', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, result }) 
-            });
-            console.log("✅ Logged to MongoDB:", { email, result });
-
-          } catch (err) {
-            console.error("❌ logAccess failed:", err);
-          }
+        } catch (err) {
+          console.error("❌ logAccess failed:", err);
         }
-
+      }
       async function verifyTotp() {
         const code = document.getElementById("totpCode").value.trim();
         if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");
@@ -357,7 +350,6 @@
         }
 
        if (document.getElementById("rememberDevice").checked) {
-        const ip = await getUserIP(); 
 
         localStorage.setItem(`remember_${tempUser.uid}`, "yes");
         const docRef = doc(db, "users", tempUser.uid);

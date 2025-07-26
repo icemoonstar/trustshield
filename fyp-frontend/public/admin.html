@@ -250,72 +250,45 @@
     }
 
     function renderLogs() {
-      const logTable = document.getElementById("logTableBody");
-      logTable.innerHTML = "";
+        const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
+        const dateFilter = document.getElementById("logSearchDate").value;
+        const logTable = document.getElementById("logTableBody");
+        logTable.innerHTML = '';
 
-      const logSearchInput = document.getElementById("logSearchEmail").value.trim().toLowerCase();
-      const logSearchDate = document.getElementById("logSearchDate").value;
+        const filteredLogs = allLogs.filter(log => {
+          const matchEmail = (log.email || '').toLowerCase().includes(emailKeyword);
+          let matchDate = true;
 
-      const filteredLogs = allLogs.filter(log => {
-        const matchEmail = log.email?.toLowerCase().includes(logSearchInput);
-        let matchDate = true;
+          if (dateFilter) {
+            const selectedDate = new Date(dateFilter);
+            const ts = log.timestamp?.seconds
+              ? new Date(log.timestamp.seconds * 1000)
+              : new Date(log.timestamp);
+            matchDate =
+              ts.getFullYear() === selectedDate.getFullYear() &&
+              ts.getMonth() === selectedDate.getMonth() &&
+              ts.getDate() === selectedDate.getDate();
+          }
 
-        if (logSearchDate) {
-          const selectedDate = new Date(logSearchDate);
+          return matchEmail && matchDate;
+        });
+
+        filteredLogs.forEach(log => {
           const ts = log.timestamp?.seconds
             ? new Date(log.timestamp.seconds * 1000)
             : new Date(log.timestamp);
-          matchDate =
-            ts.getDate() === selectedDate.getDate() &&
-            ts.getMonth() === selectedDate.getMonth() &&
-            ts.getFullYear() === selectedDate.getFullYear();
-        }
-
-        return matchEmail && matchDate;
-      });
-
-      filteredLogs.forEach(log => {
-        const row = document.createElement("tr");
-
-        const ts = log.timestamp?.seconds
-          ? new Date(log.timestamp.seconds * 1000)
-          : new Date(log.timestamp);
-
-        row.innerHTML = `
-          <td>${ts.toLocaleString()}</td>
-          <td>${log.email || "N/A"}</td>
-          <td>${log.ip || "N/A"}</td>
-          <td>${log.result || "N/A"}</td>
-        `;
-
-        logTable.appendChild(row);
-      });
-    }
-
-      const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
-      const snapshot = await getDocs(q);
-      allLogs = snapshot.docs.map(doc => doc.data());
-      renderLogs();
-      renderChart();
-    function renderLogs() {
-      const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
-      const dateFilter = document.getElementById("logSearchDate").value;
-      const table = document.querySelector('#logTable tbody');
-      table.innerHTML = '';
-      allLogs
-        .filter(log => {
-          const matchEmail = (log.email || '').toLowerCase().includes(emailKeyword);
-          const ts = log.timestamp?.toDate?.();
-          const matchDate = !dateFilter || (ts && ts.toISOString().slice(0, 10) === dateFilter);
-          return matchEmail && matchDate;
-        })
-        .forEach(data => {
-          const ts = data.timestamp?.toDate?.();
-          const timeStr = ts ? ts.toLocaleString() : 'Invalid Timestamp';
-          const row = `<tr><td>${timeStr}</td><td>${data.email}</td><td>${data.ip}</td><td>${data.result}</td></tr>`;
-          table.innerHTML += row;
+          const timeStr = ts.toLocaleString();
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${timeStr}</td>
+            <td>${log.email || "N/A"}</td>
+            <td>${log.ip || "N/A"}</td>
+            <td>${log.result || "N/A"}</td>
+          `;
+          logTable.appendChild(row);
         });
-    }
+      }
+
 
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'

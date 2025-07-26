@@ -315,30 +315,27 @@
          }
         }
         async function logAccess(email, result) {
-          console.log(`📤 logAccess() called: email=${email}, result=${result}`);
-          try {
+        console.log(`📤 logAccess() called: email=${email}, result=${result}`);
+        try {
+          await addDoc(collection(db, 'logs'), {
+            email,
+            ip: "logged by server",
+            result,
+            timestamp: serverTimestamp()
+          });
+          console.log("✅ Logged to Firestore:", { email, result });
 
-            await addDoc(collection(db, 'logs'), {
-              email,
-              ip: "logged by server",
-              result,
-              timestamp: serverTimestamp()
-            });
-            console.log("✅ Logged to Firestore:", { email, result });
+          await fetch('https://trustshield.onrender.com/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, result }) 
+          });
+          console.log("✅ Logged to MongoDB:", { email, result });
 
-  
-            await fetch('https://trustshield.onrender.com/logs', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, result }) 
-            });
-            console.log("✅ Logged to MongoDB:", { email, result });
-
-          } catch (err) {
-            console.error("❌ logAccess failed:", err);
-          }
+        } catch (err) {
+          console.error("❌ logAccess failed:", err);
         }
-
+      }
       async function verifyTotp() {
         const code = document.getElementById("totpCode").value.trim();
         if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");

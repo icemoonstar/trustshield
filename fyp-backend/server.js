@@ -47,6 +47,22 @@ app.get('/logs', async (req, res) => {
   }
 });
 
+// 🔧 Add this:
+app.get('/get-ip', (req, res) => {
+  const ip =
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.connection.remoteAddress ||
+    req.socket?.remoteAddress ||
+    'unknown';
+  res.json({ ip });
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`✅ FYP Server is running on http://localhost:${PORT}`);
+});
+
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`✅ FYP Server is running on http://localhost:${PORT}`);

@@ -51,6 +51,13 @@
       padding-top: 20px;
     }
 
+    .top-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px; 
+      margin-bottom: 20px;
+   }
+
     button {
       background: #1d2b64;
       color: #fff;
@@ -111,12 +118,14 @@
 </head>
 <body>
   <div class="container">
-    <button id="logoutBtn">Logout</button>
+    <div class="top-buttons">
+      <button id="profileBtn">Go to My Profile</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
     <h1>Welcome to TrustShield</h1>
 
     <label for="dateInput">Filter by Date:</label>
     <input type="date" id="dateInput" />
-
     <label for="searchInput">Search IP / Result:</label>
     <input type="text" id="searchInput" placeholder="e.g. 127.0.0.1 or success" />
 

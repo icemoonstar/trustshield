@@ -80,6 +80,14 @@
     background: #111a3d;
   }
 
+  .top-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px; 
+  margin-bottom: 20px;
+  }
+
+
   .table-container {
     overflow-x: auto;
     width: 100%;
@@ -141,8 +149,10 @@
 </head>
 <body>
   <div class="dashboard">
-    <button id="logoutBtn">Logout</button>
-
+    <div class="top-buttons">
+      <button id="profileBtn">Go to My Profile</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
     <h1>Admin Dashboard</h1>
     <div class="section">
       <h2>All Users</h2>
@@ -156,22 +166,20 @@
         </table>
       </div>
 
-    <div class="section">
-      <h2>Access Logs</h2>
-      <div class="search-bar">
-        <input type="text" id="logSearchEmail" placeholder="Search log by email..." />
-        <input type="date" id="logSearchDate" />
-      </div>
-      <canvas id="logChart"></canvas>
-      <div class="table-container">
-        <table id="logTable">
-          <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
-
-          <tbody id="logTableBody"></tbody>
-
-          <tbody></tbody>
-
-        </table>
+      <div class="section">
+        <h2>Access Logs</h2>
+          <div class="search-bar">
+            <input type="text" id="logSearchEmail" placeholder="Search log by email..." />
+            <input type="date" id="logSearchDate" />
+          </div>
+          <canvas id="logChart"></canvas>
+          <div class="table-container">
+            <table id="logTable">
+              <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
+              <tbody id="logTableBody"></tbody>
+              <tbody></tbody>
+            </table>
+          </div>
       </div>
     </div>
   </div>
@@ -336,6 +344,9 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
     document.getElementById("logSearchDate").addEventListener("change", renderLogs);
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
+    });
+    document.getElementById('profileBtn').addEventListener('click', () => {
+    window.location.href = '/profile.html'; 
     });
   </script>
 </body>

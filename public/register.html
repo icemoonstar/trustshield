@@ -145,6 +145,8 @@
     <h1>Register Account</h1>                         
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="text" id="phone" placeholder="Phone Number">
     <button onclick="register()">Register</button>
     <p id="status"></p>
     <p>Already have an account? <a href="login.html">Login here</a></p>
@@ -170,7 +172,9 @@
       return pattern.test(password);
     }
 
-    function register() {
+   function register() {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
@@ -185,7 +189,10 @@
           cred.user.sendEmailVerification();
           return db.collection("users").doc(cred.user.uid).set({
             email: email,
-            role: "user"
+            name: name,
+            phone: phone,
+            role: "user",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         })
         .then(() => {

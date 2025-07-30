@@ -155,15 +155,15 @@
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
-
-  <script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
+      authDomain: "firm-source-440003-a8.firebaseapp.com",
+      projectId: "firm-source-440003-a8",
+      storageBucket: "firm-source-440003-a8.appspot.com",
+      messagingSenderId: "848973756858",
+      appId: "1:848973756858:web:c0d17437ac2066346d8583",
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -176,27 +176,30 @@
     const statusDiv = document.getElementById("status");
 
     auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        const uid = user.uid;
-        emailInput.value = user.email;
-
-        try {
-          const doc = await db.collection("users").doc(uid).get();
-          if (doc.exists) {
-            const data = doc.data();
-            nameInput.value = data.name || "";
-            phoneInput.value = data.phone || "";
-          }
-        } catch (err) {
-          statusDiv.innerText = "Failed to fetch user data.";
-          console.error(err);
-        }
-      } else {
+      if (!user) {
         window.location.href = "login.html";
+        return;
+      }
+
+      emailInput.value = user.email;
+
+      try {
+        const docRef = db.collection("users").doc(user.uid);
+        const doc = await docRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          nameInput.value = data.name || "";
+          phoneInput.value = data.phone || "";
+        } else {
+          statusDiv.innerText = "⚠️ No user data found.";
+        }
+      } catch (err) {
+        console.error(err);
+        statusDiv.innerText = "❌ Failed to fetch user data.";
       }
     });
 
-    async function updateProfile() {
+    window.updateProfile = async function () {
       const user = auth.currentUser;
       if (!user) return;
 
@@ -207,13 +210,25 @@
       try {
         await db.collection("users").doc(uid).update({ name, phone });
         statusDiv.innerText = "✅ Profile updated!";
-        statusDiv.style.color = "lightgreen";
+        statusDiv.style.color = "green";
+
+        const userDoc = await db.collection("users").doc(uid).get();
+        const userData = userDoc.data();
+
+        if (userData.role === "admin") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "user.html";
+        }
       } catch (err) {
+        console.error(err);
         statusDiv.innerText = "❌ Failed to update profile.";
         statusDiv.style.color = "red";
-        console.error(err);
       }
-    }
-  </script>
+    };
+  });
+</script>
+
+
 </body>
 </html>

@@ -1,3 +1,4 @@
+console.log("2");
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -106,4 +107,4 @@ app.get('/get-ip', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ FYP Server is running on http://localhost:${PORT}`);
 });
-console.log("2");
+

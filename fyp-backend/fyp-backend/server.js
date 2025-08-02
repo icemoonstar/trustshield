@@ -106,3 +106,4 @@ app.get('/get-ip', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ FYP Server is running on http://localhost:${PORT}`);
 });
+console.log("2");

@@ -269,8 +269,6 @@
             const userData = userDoc.data();
             await logAccess(user.email, 'success');
             return redirectToDashboard(userData.role);
-
-            // ↓↓↓ 以下是 MFA 逻辑 ↓↓↓
             if (!userData.totpSecret) {
               totpSecret = generateSecret();
               const otpauth = getOtpAuthUrl(user.email, totpSecret);
@@ -374,6 +372,11 @@
       function setStatus(msg) {
         document.getElementById("status").innerText = msg;
       }
+      await fetch('https://trustshield.onrender.com/failed-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, ip })
+    });
     </script>
     </div>
   </body>

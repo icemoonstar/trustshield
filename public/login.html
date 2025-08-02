@@ -372,11 +372,14 @@
       function setStatus(msg) {
         document.getElementById("status").innerText = msg;
       }
-      await fetch('https://trustshield.onrender.com/failed-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, ip })
-    });
+      const ipRes = await fetch("https://trustshield.onrender.com/get-ip");
+        const { ip } = await ipRes.json();
+        await fetch('https://trustshield.onrender.com/failed-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, ip })
+        });
+
     </script>
     </div>
   </body>

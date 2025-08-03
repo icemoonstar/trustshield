@@ -292,19 +292,21 @@
           } catch (err) {
             console.error("🔥 Login failed:", err.message);
             await logAccess(email, 'failed');
-            try {
-              await fetch('https://trustshield.onrender.com/failed-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email }) 
-              });
-              console.log("📡 Sent failed login record to backend.");
-            } catch (sendErr) {
-              console.error("❌ Failed to send failed-login:", sendErr);
+            if (email) {
+                  try {
+                    await fetch('https://trustshield.onrender.com/failed-login', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email })
+                    });
+                    console.log("📡 Sent failed login to backend.");
+                  } catch (sendErr) {
+                    console.error("❌ Failed to send failed-login:", sendErr);
+                  }
+                }
+                setStatus("❌ " + err.message);
+              }
             }
-            setStatus("❌ " + err.message);
-          }
-        }
 
        async function logAccess(email, result) {
         console.log(`📤 logAccess() called: email=${email}, result=${result}`);
@@ -383,17 +385,6 @@
       function setStatus(msg) {
         document.getElementById("status").innerText = msg;
       }
-      // Get IP (optional, for debugging only)
-      const ipRes = await fetch("https://trustshield.onrender.com/get-ip");
-      const { ip } = await ipRes.json();
-
-      // Send failed login to backend
-      await fetch('https://trustshield.onrender.com/failed-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Only send email (backend auto-detects IP)
-        body: JSON.stringify({ email: email })
-      });
     </script>
     </div>
   </body>

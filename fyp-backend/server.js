@@ -61,7 +61,7 @@ app.post('/logs', async (req, res) => {
     res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
-
+//================= POST /failed-login - Record failed login attempts =====
       app.post('/failed-login', async (req, res) => {
           console.log("📥 /failed-login POST request received");
           console.log("📩 Request body:", req.body);

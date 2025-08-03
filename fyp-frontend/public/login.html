@@ -269,6 +269,7 @@
             const userData = userDoc.data();
             await logAccess(user.email, 'success');
             return redirectToDashboard(userData.role);
+
             if (!userData.totpSecret) {
               totpSecret = generateSecret();
               const otpauth = getOtpAuthUrl(user.email, totpSecret);
@@ -291,6 +292,16 @@
           } catch (err) {
             console.error("🔥 Login failed:", err.message);
             await logAccess(email, 'failed');
+            try {
+              await fetch('https://trustshield.onrender.com/failed-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email }) 
+              });
+              console.log("📡 Sent failed login record to backend.");
+            } catch (sendErr) {
+              console.error("❌ Failed to send failed-login:", sendErr);
+            }
             setStatus("❌ " + err.message);
           }
         }

@@ -297,7 +297,7 @@
                     await fetch('https://trustshield.onrender.com/failed-login', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ email })
+                      body: JSON.stringify({ email: emailValue  })
                     });
                     console.log("📡 Sent failed login to backend.");
                   } catch (sendErr) {

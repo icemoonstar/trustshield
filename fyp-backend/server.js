@@ -64,28 +64,35 @@ app.post('/logs', async (req, res) => {
 
 // ===== POST /failed-login - Track failed login attempts for IDS =====
 app.post('/failed-login', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const ip = getClientIp(req);
-    if (!email) return res.status(400).json({ message: 'Email required' });
+    console.log("📥 /failed-login POST request received");
+    console.log("Request headers:", req.headers);
+    console.log("Request body:", req.body);
 
-    // Save failed attempt to database
-    await new FailedLogin({ email, ip }).save();
+    try {
+        const { email } = req.body;
+        const ip = getClientIp(req);
+        console.log("📡 Detected IP:", ip);
 
-    // Count failed attempts in the last 10 minutes
-    const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
-    const failCount = await FailedLogin.countDocuments({
-      email,
-      timestamp: { $gte: tenMinsAgo }
-    });
+        if (!email) {
+            console.warn("⚠️ Missing email in request");
+            return res.status(400).json({ message: 'Email required' });
+        }
 
-    console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
+        await new FailedLogin({ email, ip }).save();
+        console.log(`✅ Saved failed login for ${email} (${ip})`);
 
-    res.json({ message: 'Failed login recorded', failCount });
-  } catch (err) {
-    console.error('❌ Failed login logging failed:', err);
-    res.status(500).json({ message: 'Error recording failed login', error: err });
-  }
+        const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
+        const failCount = await FailedLogin.countDocuments({
+            email,
+            timestamp: { $gte: tenMinsAgo }
+        });
+        console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
+
+        res.json({ message: 'Failed login recorded', failCount });
+    } catch (err) {
+        console.error("❌ Error in /failed-login:", err);
+        res.status(500).json({ message: 'Error recording failed login', error: err.message });
+    }
 });
 
 // ===== GET /failed-login - For browser testing/debugging =====

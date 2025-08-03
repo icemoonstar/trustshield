@@ -62,12 +62,10 @@ app.post('/logs', async (req, res) => {
   }
 });
 
-console.log("📩 /failed-login request body:", req.body);
 // ===== POST /failed-login - Track failed login attempts for IDS =====
 app.post('/failed-login', async (req, res) => {
     console.log("📥 /failed-login POST request received");
-    console.log("Request headers:", req.headers);
-    console.log("Request body:", req.body);
+    console.log("📩 Request body:", req.body);
 
     try {
         const { email } = req.body;
@@ -95,6 +93,7 @@ app.post('/failed-login', async (req, res) => {
         res.status(500).json({ message: 'Error recording failed login', error: err.message });
     }
 });
+
 
 // ===== GET /failed-login - For browser testing/debugging =====
 app.get('/failed-login', (req, res) => {

@@ -62,38 +62,40 @@ app.post('/logs', async (req, res) => {
   }
 });
 
-// ===== POST /failed-login - Track failed login attempts for IDS =====
-app.post('/failed-login', async (req, res) => {
-    console.log("📥 /failed-login POST request received");
-    console.log("📩 Request body:", req.body);
+      app.post('/failed-login', async (req, res) => {
+          console.log("📥 /failed-login POST request received");
+          console.log("📩 Request body:", req.body);
+          try {
+              let { email } = req.body;
+              const ip = getClientIp(req);
+              console.log("📡 Detected IP:", ip);
 
-    try {
-        const { email } = req.body;
-        const ip = getClientIp(req);
-        console.log("📡 Detected IP:", ip);
+              // Validate email type
+              if (typeof email !== "string" || !email.trim()) {
+                  console.warn("⚠️ Invalid email format received:", email);
+                  return res.status(400).json({ message: 'Invalid email format' });
+              }
 
-        if (!email) {
-            console.warn("⚠️ Missing email in request");
-            return res.status(400).json({ message: 'Email required' });
-        }
+              email = email.trim();
 
-        await new FailedLogin({ email, ip }).save();
-        console.log(`✅ Saved failed login for ${email} (${ip})`);
+              // Save to MongoDB
+              await new FailedLogin({ email, ip }).save();
+              console.log(`✅ Saved failed login for ${email} (${ip})`);
 
-        const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
-        const failCount = await FailedLogin.countDocuments({
-            email,
-            timestamp: { $gte: tenMinsAgo }
-        });
-        console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
+              // Count failed attempts in last 10 minutes
+              const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
+              const failCount = await FailedLogin.countDocuments({
+                  email,
+                  timestamp: { $gte: tenMinsAgo }
+              });
+              console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
 
-        res.json({ message: 'Failed login recorded', failCount });
-    } catch (err) {
-        console.error("❌ Error in /failed-login:", err);
-        res.status(500).json({ message: 'Error recording failed login', error: err.message });
-    }
-});
-
+              res.json({ message: 'Failed login recorded', failCount });
+          } catch (err) {
+              console.error("❌ Error in /failed-login:", err);
+              res.status(500).json({ message: 'Error recording failed login', error: err.message });
+          }
+      });
 
 // ===== GET /failed-login - For browser testing/debugging =====
 app.get('/failed-login', (req, res) => {

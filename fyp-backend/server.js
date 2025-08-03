@@ -1,3 +1,4 @@
+console.log("3");
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -85,6 +86,14 @@ app.post('/failed-login', async (req, res) => {
     console.error('❌ Failed login logging failed:', err);
     res.status(500).json({ message: 'Error recording failed login', error: err });
   }
+});
+
+// ===== GET /failed-login - For browser testing/debugging =====
+app.get('/failed-login', (req, res) => {
+  res.json({
+    message: '✅ failed-login API 正常工作',
+    note: '此接口用于测试，正式记录失败登录请使用 POST 请求'
+  });
 });
 
 // ===== GET /logs - Retrieve all access logs =====

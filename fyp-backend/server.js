@@ -62,6 +62,7 @@ app.post('/logs', async (req, res) => {
   }
 });
 
+console.log("📩 /failed-login request body:", req.body);
 // ===== POST /failed-login - Track failed login attempts for IDS =====
 app.post('/failed-login', async (req, res) => {
     console.log("📥 /failed-login POST request received");

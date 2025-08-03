@@ -63,9 +63,7 @@
     }
 
     input[type="email"],
-    input[type="password"],
-    input[type="text"],
-    input[type="tel"] {
+    input[type="password"] {
       width: 100%;
       padding: 12px 15px;
       margin: 10px 0;
@@ -144,11 +142,11 @@
 <body>
   <div class="container">
     <img src="./TrustShield.png" alt="TrustShield Logo" class="logo">
-    <h1>Register Account</h1>                         
+    <h1>Register Account11111</h1>                         
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <input type="text" id="name" placeholder="Full Name">
-    <input type="tel" id="phone" placeholder="Phone Number">
+    <input type="text" id="phone" placeholder="Phone Number">
     <button onclick="register()">Register</button>
     <p id="status"></p>
     <p>Already have an account? <a href="login.html">Login here</a></p>
@@ -174,10 +172,10 @@
       return pattern.test(password);
     }
 
-    function register() {
-      const email = document.getElementById('email').value.trim();
+   function register() {
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
       if (!validatePassword(password)) {
@@ -190,11 +188,11 @@
         .then(cred => {
           cred.user.sendEmailVerification();
           return db.collection("users").doc(cred.user.uid).set({
-             email: email,
+            email: email,
             name: name,
             phone: phone,
             role: "user",
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         })
         .then(() => {

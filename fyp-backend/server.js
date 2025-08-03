@@ -1,4 +1,4 @@
-console.log("3");
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -91,8 +91,8 @@ app.post('/failed-login', async (req, res) => {
 // ===== GET /failed-login - For browser testing/debugging =====
 app.get('/failed-login', (req, res) => {
   res.json({
-    message: '✅ failed-login API 正常工作',
-    note: '此接口用于测试，正式记录失败登录请使用 POST 请求'
+    message: '✅ failed-login API',
+    
   });
 });
 
@@ -115,3 +115,4 @@ app.get('/get-ip', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ FYP Server is running on http://localhost:${PORT}`);
 });
+

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>User Dashboard - TrustShield</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="icon" type="image/png" href="./TrustShield.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,6 +50,13 @@
       border-top: 1px solid #ccc;
       padding-top: 20px;
     }
+
+    .top-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px; 
+      margin-bottom: 20px;
+   }
 
     button {
       background: #1d2b64;
@@ -111,12 +118,14 @@
 </head>
 <body>
   <div class="container">
-    <button id="logoutBtn">Logout</button>
+    <div class="top-buttons">
+      <button id="profileBtn">Go to My Profile</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
     <h1>Welcome to TrustShield</h1>
 
     <label for="dateInput">Filter by Date:</label>
     <input type="date" id="dateInput" />
-
     <label for="searchInput">Search IP / Result:</label>
     <input type="text" id="searchInput" placeholder="e.g. 127.0.0.1 or success" />
 
@@ -198,6 +207,9 @@
   document.getElementById("logoutBtn").addEventListener("click", () => {
     signOut(auth).then(() => location.href = 'login.html');
   });
+  document.getElementById("profileBtn").addEventListener("click", () => {
+  location.href = 'profile.html';
+});
 </script>
 </body>
 </html>

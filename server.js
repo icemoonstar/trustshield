@@ -1,35 +1,22 @@
-require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const admin = require('firebase-admin');
-const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
 
 const app = express();
-app.set('trust proxy', true); 
 const PORT = 4000;
 
-// ======= Middleware =======
 app.use(cors());
 app.use(bodyParser.json());
 
-// ======= Load ENV =======
-const MONGODB_URI = process.env.MONGODB_URI;
-const FIREBASE_CONFIG = JSON.parse(process.env.FIREBASE_CONFIG);
-
-// ======= Firebase Setup =======
-admin.initializeApp({
-  credential: admin.credential.cert(FIREBASE_CONFIG),
-});
-const firestore = admin.firestore();
-
-// ======= MongoDB Setup =======
-mongoose.connect(MONGODB_URI)
+// ===== MongoDB connection =====
+const mongoURI = 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoURI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ======= Schema & Model =======
+// ===== Schemas =====
 const accessLogSchema = new mongoose.Schema({
   email: String,
   timestamp: { type: Date, default: Date.now },
@@ -38,14 +25,25 @@ const accessLogSchema = new mongoose.Schema({
 });
 const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 
-// ======= Helper: Get Client IP =======
-const getClientIp = (req) =>
-  req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-  req.socket?.remoteAddress ||
-  req.connection?.remoteAddress ||
-  'unknown';
+// Schema for IDS failed login attempts
+const failedLoginSchema = new mongoose.Schema({
+  email: String,
+  ip: String,
+  timestamp: { type: Date, default: Date.now }
+});
+const FailedLogin = mongoose.model('FailedLogin', failedLoginSchema);
 
-// ======= Routes =======
+// ===== Helper: Get client IP address =====
+function getClientIp(req) {
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+}
+
+// ===== POST /logs - Store access logs =====
 app.post('/logs', async (req, res) => {
   try {
     const { email, result } = req.body;
@@ -56,23 +54,58 @@ app.post('/logs', async (req, res) => {
     const mongoLog = new AccessLog({ email, ip, result, timestamp });
     await mongoLog.save();
 
-    // Save to Firestore
-    await firestore.collection('logs').add({
-      email,
-      ip,
-      result,
-      timestamp: admin.firestore.Timestamp.fromDate(timestamp)
-    });
-
     console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
-    res.status(201).json({ message: 'Log saved to both DBs', ip });
-
+    res.status(201).json({ message: 'Log saved', ip });
   } catch (err) {
     console.error('❌ Logging failed:', err);
     res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
+//================= POST /failed-login - Record failed login attempts =====
+      app.post('/failed-login', async (req, res) => {
+          console.log("📥 /failed-login POST request received");
+          console.log("📩 Request body:", req.body);
+          try {
+              let { email } = req.body;
+              const ip = getClientIp(req);
+              console.log("📡 Detected IP:", ip);
 
+              // Validate email type
+              if (typeof email !== "string" || !email.trim()) {
+                  console.warn("⚠️ Invalid email format received:", email);
+                  return res.status(400).json({ message: 'Invalid email format' });
+              }
+
+              email = email.trim();
+
+              // Save to MongoDB
+              await new FailedLogin({ email, ip }).save();
+              console.log(`✅ Saved failed login for ${email} (${ip})`);
+
+              // Count failed attempts in last 10 minutes
+              const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
+              const failCount = await FailedLogin.countDocuments({
+                  email,
+                  timestamp: { $gte: tenMinsAgo }
+              });
+              console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
+
+              res.json({ message: 'Failed login recorded', failCount });
+          } catch (err) {
+              console.error("❌ Error in /failed-login:", err);
+              res.status(500).json({ message: 'Error recording failed login', error: err.message });
+          }
+      });
+
+// ===== GET /failed-login - For browser testing/debugging =====
+app.get('/failed-login', (req, res) => {
+  res.json({
+    message: '✅ failed-login API',
+    
+  });
+});
+
+// ===== GET /logs - Retrieve all access logs =====
 app.get('/logs', async (req, res) => {
   try {
     const logs = await AccessLog.find().sort({ timestamp: -1 }).limit(50);
@@ -82,10 +115,13 @@ app.get('/logs', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('✅ FYP MongoDB Logging Server is running!');
+// ===== GET /get-ip - Retrieve client IP address =====
+app.get('/get-ip', (req, res) => {
+  res.json({ ip: getClientIp(req) });
 });
 
+// ===== Start server =====
 app.listen(PORT, () => {
-  console.log(`✅ FYP Server running on http://localhost:${PORT}`);
+  console.log(`✅ FYP Server is running on http://localhost:${PORT}`);
 });
+

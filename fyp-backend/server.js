@@ -3,7 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer'); // ✅ 邮件功能
+const nodemailer = require('nodemailer');
+const admin = require('firebase-admin'); // ✅ Firestore Admin SDK
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,14 +44,20 @@ function getClientIp(req) {
   return ip;
 }
 
-// ===== Email Transporter (Change to your SMTP info) =====
+// ===== Email Transporter =====
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // 你可以换成 'hotmail'、'yahoo' 等
+  service: 'gmail',
   auth: {
-    user: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com', // 管理员邮箱
-    pass: process.env.ALERT_EMAIL_PASS || 'yourpassword' // 邮箱密码或 App Password
+    user: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com',
+    pass: process.env.ALERT_EMAIL_PASS || 'yourpassword'
   }
 });
+
+// ===== Firebase Admin SDK Init =====
+admin.initializeApp({
+  credential: admin.credential.applicationDefault() // 确保部署时有正确的 service account
+});
+const firestore = admin.firestore();
 
 // ===== POST /logs - Store access logs =====
 app.post('/logs', async (req, res) => {
@@ -62,9 +69,18 @@ app.post('/logs', async (req, res) => {
       return res.status(400).json({ message: 'Email and result are required' });
     }
 
+    // 写 MongoDB
     await new AccessLog({ email, ip, result }).save();
-    console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
 
+    // 写 Firestore
+    await firestore.collection("logs").add({
+      email,
+      ip,
+      result,
+      timestamp: new Date()
+    });
+
+    console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
     res.status(201).json({ message: 'Log saved', ip });
   } catch (err) {
     console.error('❌ Logging failed:', err.stack);
@@ -88,8 +104,17 @@ app.post('/failed-login', async (req, res) => {
     }
     email = email.trim();
 
-    // Save failed login attempt
+    // 写 MongoDB
     await new FailedLogin({ email, ip }).save();
+
+    // 写 Firestore
+    await firestore.collection("logs").add({
+      email,
+      ip,
+      result: "failed",
+      timestamp: new Date()
+    });
+
     console.log(`✅ Saved failed login for ${email} (${ip})`);
 
     // Count failed attempts in last 10 minutes
@@ -106,7 +131,7 @@ app.post('/failed-login', async (req, res) => {
     if (failCount >= threshold) {
       const mailOptions = {
         from: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com',
-        to: process.env.ALERT_EMAIL_TO || 'securityteam@example.com', // 你要接收通知的邮箱
+        to: process.env.ALERT_EMAIL_TO || 'securityteam@example.com',
         subject: `🚨 Security Alert: Multiple Failed Logins for ${email}`,
         text: `Attention:\n\nThere have been ${failCount} failed login attempts for ${email} from IP ${ip} within the last 10 minutes.\n\nPlease investigate immediately.`
       };

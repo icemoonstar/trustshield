@@ -260,7 +260,7 @@
         return new Uint8Array(bytes);
       }
 
-         async function login() {
+        async function login() {
           const email = document.getElementById("email").value;
           const password = document.getElementById("password").value;
           const remember = document.getElementById("rememberDevice").checked;
@@ -313,74 +313,104 @@
             document.getElementById("totp-section").style.display = 'block';
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
-          } catch (err) {
-            const email = document.getElementById("email").value;
-            const ip = await getUserIP();
-            await logAccess(email, 'failed');
-            setStatus("❌ " + err.message);
-          }
-        }
-          async function logAccess(email, result) {
+            } catch (err) {
+                const email = document.getElementById("email").value;
+
+                // Log to /logs
+                try { 
+                    await logAccess(email, 'failed'); 
+                } catch (e) {
+                    console.error("Error logging to /logs:", e);
+                }
+
+                // Log to /failed-login
+                try { 
+                    await logFailedLogin(email); 
+                } catch (e) {
+                    console.error("Error logging to /failed-login:", e);
+                }
+
+                setStatus("❌ " + err.message);
+                }
+            }
+            async function logAccess(email, result) {
+              try {
+                const res = await fetch('https://fyp-1-xbt3.onrender.com/logs', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, result }) 
+                });
+
+                const data = await res.json();
+
+                const ip = data.ipUsed;
+
+                if (ip && ip !== 'unknown') {
+                  await addDoc(collection(db, 'logs'), {
+                    email,
+                    ip,
+                    result,
+                    timestamp: serverTimestamp()
+                  });
+                  console.log("✅ Logged with IP:", ip);
+                } else {
+                  console.warn("⚠️ No valid IP to log:", ip);
+                }
+              } catch (err) {
+                console.error("❌ Log failed:", err);
+              }
+            }
+            // Function to log failed login attempts
+            async function logFailedLogin(email) {
             try {
-              const res = await fetch('https://fyp-1-xbt3.onrender.com/logs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, result }) 
+              const response = await fetch("https://trustshield.onrender.com/failed-login", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ email })
               });
 
-              const data = await res.json();
-
-              const ip = data.ipUsed;
-
-              if (ip && ip !== 'unknown') {
-                await addDoc(collection(db, 'logs'), {
-                  email,
-                  ip,
-                  result,
-                  timestamp: serverTimestamp()
-                });
-                console.log("✅ Logged with IP:", ip);
+              if (!response.ok) {
+                  console.error("Failed to log failed login:", response.statusText);
               } else {
-                console.warn("⚠️ No valid IP to log:", ip);
+                  console.log("Failed login logged successfully");
               }
-            } catch (err) {
-              console.error("❌ Log failed:", err);
-            }
+          } catch (error) {
+              console.error("Error logging failed login:", error);
           }
-
-      async function sendLogToMongo(email, ip, result) {
-      const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
-      await fetch(apiURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ip, result })
-      });
-    }
-
-      async function verifyTotp() {
-        const code = document.getElementById("totpCode").value.trim();
-        if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");
-
-        const expected = await generateTOTP(totpSecret);
-        if (code !== expected) return setStatus("❌ Invalid code. Try again.");
-
-        const docRef = doc(db, "users", tempUser.uid);
-        const userDoc = await getDoc(docRef);
-        if (!userDoc.data().totpSecret) {
-          await updateDoc(docRef, { totpSecret });
-        }
-
-       if (document.getElementById("rememberDevice").checked) {
-        const ip = await getUserIP();
-
-        localStorage.setItem(`remember_${tempUser.uid}`, "yes");
-        const docRef = doc(db, "users", tempUser.uid);
-        await updateDoc(docRef, {
-          knownIPs: arrayUnion(ip)
-        });
       }
+              async function sendLogToMongo(email, ip, result) {
+              const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
+              await fetch(apiURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, ip, result })
+              });
+            }
 
+              async function verifyTotp() {
+                const code = document.getElementById("totpCode").value.trim();
+                if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");
 
+                const expected = await generateTOTP(totpSecret);
+                if (code !== expected) return setStatus("❌ Invalid code. Try again.");
+
+                const docRef = doc(db, "users", tempUser.uid);
+                const userDoc = await getDoc(docRef);
+                if (!userDoc.data().totpSecret) {
+                  await updateDoc(docRef, { totpSecret });
+                }
+
+              if (document.getElementById("rememberDevice").checked) {
+                const ip = await getUserIP();
+
+                localStorage.setItem(`remember_${tempUser.uid}`, "yes");
+                const docRef = doc(db, "users", tempUser.uid);
+                await updateDoc(docRef, {
+                  knownIPs: arrayUnion(ip)
+                });
+              }
         await logAccess(tempUser.email, 'success');
         redirectToDashboard(userDoc.data().role || "user");
         console.log("✅ Scucess", userDoc.data().role);

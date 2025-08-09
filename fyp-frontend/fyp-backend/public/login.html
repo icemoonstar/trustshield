@@ -277,6 +277,7 @@
             if (!userDoc.exists()) return setStatus("❌ User role not found.");
 
             const userData = userDoc.data();
+            const currentIP = await getUserIP();
             const knownIPs = userData.knownIPs || [];
            // console.log("✅ Scucess", userDoc.data().role);
            // redirectToDashboard(userDoc.data().role || "user");
@@ -368,7 +369,6 @@
                 logAccess(email, 'failed'); 
               });
 
-
             // Function to log failed login attempts
            async function logFailedLogin(email) {
             try {
@@ -388,7 +388,7 @@
           } catch (error) {
               console.error("Error logging failed login:", error);
           }
-        }
+      }
               async function sendLogToMongo(email, ip, result) {
               const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
               await fetch(apiURL, {

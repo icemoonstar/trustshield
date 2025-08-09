@@ -359,15 +359,15 @@
                 console.error("❌ Log failed:", err);
               }
             }
-            /*signInWithEmailAndPassword(auth, email, password)
+            signInWithEmailAndPassword(auth, email, password)
               .then((userCredential) => {
                 logAccess(email, 'success');
               })
               .catch((error) => {
                 document.getElementById('message').innerText = 'Login failed: ' + error.message;
                 logAccess(email, 'failed'); 
-              });*/
-              
+              });
+
 
             // Function to log failed login attempts
            async function logFailedLogin(email) {

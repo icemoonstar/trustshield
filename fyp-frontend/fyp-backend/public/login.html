@@ -7,27 +7,62 @@
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: 'Inter', sans-serif;
       background: linear-gradient(135deg, #1d2b64, #f8cdda);
-      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-      animation: fadeIn 1.2s ease-in;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 1.5s ease-in;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .container { background: #fff; padding: 36px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-width: 420px; width: 100%; text-align: center; }
-    .logo { width: 185px; height: auto; margin: 0 auto 12px; }
-    h1 { font-size: 26px; color: #1d2b64; margin-bottom: 18px; }
-    input[type="email"], input[type="password"], input[type="text"] { width: 100%; padding: 12px 14px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
-    input:focus { border-color: #1d2b64; outline: none; box-shadow: 0 0 0 3px rgba(29,43,100,0.12); }
-    button { width: 100%; padding: 12px; background: #1d2b64; color: #fff; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; margin-top: 12px; }
-    button:hover { background: #111a3d; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      animation: slideIn 0.8s ease-in-out;
+      text-align: center;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .logo {
+      width: 185px;
+      height: auto;
+      animation: logoPop 0.8s ease-in-out;
+    }
+    @keyframes logoPop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    h1 { font-size: 26px; color: #1d2b64; margin-bottom: 25px; }
+    input[type="email"], input[type="password"], input[type="text"] {
+      width: 100%; padding: 12px 15px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px;
+    }
+    input:focus { border-color: #1d2b64; outline: none; box-shadow: 0 0 0 3px rgba(29, 43, 100, 0.2); }
+    button { width: 100%; padding: 12px; background: #1d2b64; color: #fff; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+    button:hover { background: #111a3d; transform: translateY(-2px); }
     #status { margin-top: 12px; font-size: 14px; color: #d8000c; min-height: 18px; }
-    p { margin-top: 12px; font-size: 14px; }
-    a { color: #1d2b64; font-weight: 600; }
-    #reset-section, #totp-section, #totp-setup { display: none; margin-top: 14px; }
+    p { margin-top: 20px; font-size: 14px; }
+    a { color: #1d2b64; text-decoration: none; font-weight: 600; }
+    #reset-section, #totp-section, #totp-setup { display: none; margin-top: 20px; }
     #qrImage { margin-top: 10px; }
-    footer { margin-top: 18px; font-size: 12px; color: #666; }
+    footer { margin-top: 30px; font-size: 12px; color: #666; text-align: center; }
   </style>
 </head>
 <body>
@@ -38,7 +73,6 @@
     <input type="password" id="password" placeholder="Password"><br>
     <label><input type="checkbox" id="rememberDevice"> Remember this device</label><br>
     <button id="loginBtn">Login</button>
-
     <p><a href="#" onclick="toggleReset(); return false;">Forgot password?</a></p>
     <p>Don't have an account? <a href="index.html">Register here</a></p>
 
@@ -52,7 +86,7 @@
       <h3>Multi-Factor Authentication</h3>
       <div id="totp-setup">
         <p>Scan this QR code with Google Authenticator:</p>
-        <img id="qrImage" src="" width="200" alt="QR code"><br>
+        <img id="qrImage" src="" width="200"><br>
         <p>Then enter the 6-digit code below:</p>
       </div>
       <input type="text" id="totpCode" placeholder="Enter 6-digit code"><br>
@@ -65,8 +99,12 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, serverTimestamp, arrayUnion } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc,
+      addDoc, collection, serverTimestamp, arrayUnion
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+    // <-- 保留你原本的 firebaseConfig（下面示範使用你之前給的 key）
     const firebaseConfig = {
       apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
       authDomain: "firm-source-440003-a8.firebaseapp.com",
@@ -136,7 +174,7 @@
       return new Uint8Array(bytes);
     }
 
-    // MAIN LOGIN
+    // ===== MAIN LOGIN =====
     async function login() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -148,20 +186,21 @@
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const user = cred.user;
 
-        if (!user.emailVerified) { setStatus('⚠️ Please verify your email before login.'); return; }
+        if (!user) throw new Error('No user returned');
 
         const docRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(docRef);
-        if (!userSnap.exists()) { setStatus('❌ User role not found.'); await logAccess(email, 'failed'); return; }
+        let userSnap = await getDoc(docRef);
+        let userData = {};
 
-        const userData = userSnap.data() || {};
+        if (!userSnap.exists()) {
+          await setDoc(docRef, { email: user.email, role: 'user', totpSecret: null, knownIPs: [] });
+          userData = { totpSecret: null, knownIPs: [], role: 'user' };
+        } else {
+          userData = userSnap.data() || {};
+        }
+
         const currentIP = await getUserIP();
         const knownIPs = userData.knownIPs || [];
-
-        if (knownIPs.includes(currentIP) || localStorage.getItem(`remember_${user.uid}`) === "yes") {
-          await logAccess(user.email, 'success');
-          return redirectToDashboard(userData.role);
-        }
 
         if (!userData.totpSecret) {
           totpSecret = generateSecret();
@@ -173,11 +212,14 @@
           qrDisplayed = true;
           setTimeout(() => { if (qrDisplayed) document.getElementById("totp-setup").style.display = 'none'; }, 15000);
           await logAccess(user.email, 'waiting');
-          setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Enter or click Verify.");
+          setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Verify.");
           return;
         }
+        if (knownIPs.includes(currentIP) || localStorage.getItem(`remember_${user.uid}`) === "yes") {
+          await logAccess(user.email, 'success');
+          return redirectToDashboard(userData.role);
+        }
 
-        // user has existing TOTP
         totpSecret = userData.totpSecret;
         tempUser = user;
         document.getElementById("totp-section").style.display = 'block';
@@ -185,7 +227,6 @@
 
       } catch (err) {
         console.error('Login error:', err);
-        // attempt to record failed login (best-effort)
         try { await logAccess(email, 'failed'); } catch (e) { console.error('logAccess failed:', e); }
         try { await logFailedLogin(email); } catch (e) { console.error('logFailedLogin failed:', e); }
         setStatus("❌ " + (err && err.message ? err.message : err));
@@ -207,7 +248,6 @@
           console.warn('Backend /logs returned non-ok:', res && res.status);
         }
 
-        // Try writing to Firestore (may be blocked by security rules when unauthenticated)
         try {
           await addDoc(collection(db, 'logs'), { email, ip, result, timestamp: serverTimestamp() });
           console.log('✅ Logged to Firestore (best-effort):', ip);
@@ -245,10 +285,11 @@
       const userSnap = await getDoc(docRef);
       const userData = userSnap.exists() ? userSnap.data() : {};
 
+ 
       if (!userData.totpSecret) {
         try { await updateDoc(docRef, { totpSecret }); } catch (e) { console.warn('Failed to save totpSecret:', e); }
       }
-
+      ）
       if (document.getElementById("rememberDevice").checked) {
         const ip = await getUserIP();
         localStorage.setItem(`remember_${tempUser.uid}`, "yes");
@@ -256,7 +297,7 @@
       }
 
       await logAccess(tempUser.email, 'success');
-      redirectToDashboard((userData && userData.role) || "user");
+      redirectToDashboard(userData.role || "user");
     }
 
     function redirectToDashboard(role) {

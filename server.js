@@ -138,7 +138,7 @@ app.post('/failed-login', async (req, res) => {
           console.warn('⚠️ No admin emails found in Firestore to send alert');
         } else {
           const mailOptions = {
-            from: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com',
+            from: process.env.ALERT_EMAIL_USER || 'wongsjun.24@gmail.com',
             to: adminEmails,
             subject: `🚨 Security Alert: Multiple Failed Logins for ${email}`,
             text: `Attention:\n\nThere have been ${failCount} failed login attempts for ${email} from IP ${ip} within the last 10 minutes.\n\nPlease investigate immediately.`

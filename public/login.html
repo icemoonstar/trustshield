@@ -399,7 +399,7 @@
             }
           }
             // Function to log failed login attempts
-           async function logFailedLogin(email) {
+           async function logFailedLogin(email,ip) {
             try {
                 const response = await fetch("https://trustshield.onrender.com/failed-login", {
                     method: "POST",
@@ -408,7 +408,7 @@
                     },
                     body: JSON.stringify({
                         email: String(email),  
-                        ip: ipAddress || ""   
+                        ip: ip || ""   
                     })
                 });
 

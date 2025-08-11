@@ -363,36 +363,41 @@
                 setStatus("❌ " + err.message);
                 }
             }
-            async function logAccess(email, result) {
-              try {
-                const res = await fetch('https://fyp-1-xbt3.onrender.com/logs', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email, result }) 
+           async function logAccess(email, result, isFailed = false) {
+            try {
+              // Step 1: Get IP from backend
+              const res = await fetch('https://trustshield.onrender.com/logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, result })
+              });
+
+              const data = await res.json();
+              const ip = data.ipUsed || "unknown";
+
+              // Step 2: Save to Firestore
+              await addDoc(collection(db, 'logs'), {
+                email,
+                ip,
+                result,
+                timestamp: serverTimestamp()
+              });
+              console.log(`✅ ${result} log recorded with IP:`, ip);
+
+              // Step 3: If failed login, send extra request
+              if (isFailed) {
+                await fetch("https://trustshield.onrender.com/failed-login", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, ip })
                 });
-
-                const data = await res.json();
-
-                const ip = data.ipUsed;
-
-                if (ip && ip !== 'unknown') {
-                  await addDoc(collection(db, 'logs'), {
-                    email,
-                    ip,
-                    result,
-                    timestamp: serverTimestamp()
-                  });
-                  console.log("✅ Logged with IP:", ip);
-                } else {
-                  console.warn("⚠️ No valid IP to log:", ip);
-                }
-              } catch (err) {
-                console.error("❌ Log failed:", err);
+                console.log("📩 Failed login alert sent");
               }
+
+            } catch (err) {
+              console.error("❌ Logging error:", err);
             }
-
-
-
+          }
             // Function to log failed login attempts
            async function logFailedLogin(email) {
             try {
@@ -416,7 +421,6 @@
                 console.error("Error logging failed login:", error);
             }
         }
-
               async function sendLogToMongo(email, ip, result) {
               const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
               await fetch(apiURL, {

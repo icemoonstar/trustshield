@@ -104,10 +104,8 @@ app.post('/failed-login', async (req, res) => {
     }
     email = email.trim();
 
-    // 写 MongoDB
     await new FailedLogin({ email, ip }).save();
 
-    // 写 Firestore
     await firestore.collection("logs").add({
       email,
       ip,

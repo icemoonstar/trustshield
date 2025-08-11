@@ -103,11 +103,7 @@ app.post('/failed-login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email format' });
     }
     email = email.trim();
-
-    // 写 MongoDB
     await new FailedLogin({ email, ip }).save();
-
-    // 写 Firestore
     await firestore.collection("logs").add({
       email,
       ip,
@@ -127,29 +123,43 @@ app.post('/failed-login', async (req, res) => {
     console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
 
     // === Trigger email alert if threshold exceeded ===
-    const threshold = 5;
-    if (failCount >= threshold) {
-      const mailOptions = {
-        from: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com',
-        to: process.env.ALERT_EMAIL_TO || 'securityteam@example.com',
-        subject: `🚨 Security Alert: Multiple Failed Logins for ${email}`,
-        text: `Attention:\n\nThere have been ${failCount} failed login attempts for ${email} from IP ${ip} within the last 10 minutes.\n\nPlease investigate immediately.`
-      };
+    const threshold = 3;
 
+    if (failCount >= threshold) {
       try {
-        await transporter.sendMail(mailOptions);
-        console.log(`📧 Alert email sent to ${mailOptions.to}`);
+        const adminUsersSnapshot = await firestore.collection('users').where('role', '==', 'admin').get();
+        const adminEmails = [];
+        adminUsersSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.email) adminEmails.push(data.email);
+        });
+
+        if (adminEmails.length === 0) {
+          console.warn('⚠️ No admin emails found in Firestore to send alert');
+        } else {
+          const mailOptions = {
+            from: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com',
+            to: adminEmails,
+            subject: `🚨 Security Alert: Multiple Failed Logins for ${email}`,
+            text: `Attention:\n\nThere have been ${failCount} failed login attempts for ${email} from IP ${ip} within the last 10 minutes.\n\nPlease investigate immediately.`
+          };
+
+          await transporter.sendMail(mailOptions);
+          console.log(`📧 Alert emails sent to: ${adminEmails.join(', ')}`);
+        }
       } catch (emailErr) {
         console.error('❌ Failed to send alert email:', emailErr.message);
       }
     }
 
     res.json({ message: 'Failed login recorded', failCount });
+
   } catch (err) {
     console.error("❌ Error in /failed-login:", err.stack);
     res.status(500).json({ message: 'Error recording failed login', error: err.message });
   }
 });
+
 
 // ===== GET /failed-login - Debug route =====
 app.get('/failed-login', (req, res) => {

@@ -2,10 +2,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+//const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin'); // ✅ Firestore Admin SDK
-
+app.use(express.json());
 const app = express();
 const PORT = process.env.PORT || 4000;
 

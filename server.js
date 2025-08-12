@@ -5,7 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const admin = require('firebase-admin'); // ✅ Firestore Admin SDK
-
+require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -185,4 +185,19 @@ app.get('/get-ip', (req, res) => {
 // ===== Start server =====
 app.listen(PORT, () => {
   console.log(`✅ FYP Server running on port ${PORT}`);
+});
+// ===== GET /test-email - Simple email test =====
+app.get('/test-email', async (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.ALERT_EMAIL_USER || 'wongsjun.24@gmail.com',
+      to: '你的收件邮箱@gmail.com',
+      subject: '📧 Test Email from FYP Server',
+      text: '如果你看到这封邮件，说明邮件功能正常。'
+    });
+    res.send('✅ Test email sent successfully');
+  } catch (err) {
+    console.error('❌ Email test failed:', err.message);
+    res.status(500).send('❌ Failed to send test email: ' + err.message);
+  }
 });

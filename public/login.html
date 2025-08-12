@@ -344,11 +344,9 @@
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
             } catch (err) {
-                const email = document.getElementById("email").value;
-
                 // Log to /logs
                 try { 
-                    await logAccess(email, 'failed'); 
+                    await logAccess(emailValue, 'failed'); 
                 } catch (e) {
                     console.error("Error logging to /logs:", e);
                 }

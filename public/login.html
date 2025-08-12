@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - TrustShield</title>
+<<<<<<< HEAD
   <link rel="icon" type="image/png" href="../TrustShield.png">
+=======
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
       * {
@@ -231,10 +235,15 @@
         return secret;
       }
 
+<<<<<<< HEAD
       // *** CHANGED: fixed to use template literal + encodeURIComponent for label ***
       function getOtpAuthUrl(userEmail, secret) {
         const label = `TrustShield:${userEmail}`;
         return `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=TrustShield`;
+=======
+      function getOtpAuthUrl(userEmail, secret) {
+        return 'otpauth://totp/TrustShield:${userEmail}?secret=${secret}&issuer=TrustShield';
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
       }
 
       async function generateTOTP(secret) {
@@ -262,6 +271,7 @@
         return new Uint8Array(bytes);
       }
 
+<<<<<<< HEAD
       // *** ADDED: setupTOTP -> generate secret, save to Firestore, and show QR ***
       async function setupTOTP(user) {
         try {
@@ -299,6 +309,9 @@
       }
 
         async function login() {
+=======
+         async function login() {
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
           const email = document.getElementById("email").value;
           const password = document.getElementById("password").value;
           const remember = document.getElementById("rememberDevice").checked;
@@ -315,7 +328,11 @@
             if (!userDoc.exists()) return setStatus("❌ User role not found.");
 
             const userData = userDoc.data();
+<<<<<<< HEAD
             // *** REMOVED duplicate redeclaration of currentIP here (keeps first currentIP) ***
+=======
+            const currentIP = await getUserIP();
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
             const knownIPs = userData.knownIPs || [];
            // console.log("✅ Scucess", userDoc.data().role);
            // redirectToDashboard(userDoc.data().role || "user");
@@ -330,6 +347,7 @@
               await logAccess(user.email, 'success');
               return redirectToDashboard(userData.role);
             }
+<<<<<<< HEAD
 
             // *** CHANGED: call setupTOTP() to generate & store secret and show QR ***
             if (!userData.totpSecret) {
@@ -337,12 +355,30 @@
               return;
             }
 
+=======
+            if (!userData.totpSecret) {
+              totpSecret = generateSecret();
+              const otpauth = getOtpAuthUrl(user.email, totpSecret);
+              document.getElementById("qrImage").src = 'https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(otpauth)}';
+              document.getElementById("totp-setup").style.display = 'block';
+              document.getElementById("totp-section").style.display = 'block';
+              tempUser = user;
+              qrDisplayed = true;
+              setTimeout(() => {
+                if (qrDisplayed) document.getElementById("totp-setup").style.display = 'none';
+              }, 15000);   
+              await logAccess(user.email, 'waiting');
+              setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Enter or click Verify.");
+              return;
+            }
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
             // User has existing TOTP
             totpSecret = userData.totpSecret;
             tempUser = user;
             document.getElementById("totp-section").style.display = 'block';
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
+<<<<<<< HEAD
             } catch (err) {
                 // Log to /logs
                 try { 
@@ -450,6 +486,76 @@
                   knownIPs: arrayUnion(ip)
                 });
               }
+=======
+          } catch (err) {
+            const email = document.getElementById("email").value;
+            const ip = await getUserIP();
+            await logAccess(email, 'failed');
+            setStatus("❌ " + err.message);
+          }
+        }
+          async function logAccess(email, result) {
+            try {
+              const res = await fetch('https://fyp-1-xbt3.onrender.com/logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, result }) 
+              });
+
+              const data = await res.json();
+
+              const ip = data.ipUsed;
+
+              if (ip && ip !== 'unknown') {
+                await addDoc(collection(db, 'logs'), {
+                  email,
+                  ip,
+                  result,
+                  timestamp: serverTimestamp()
+                });
+                console.log("✅ Logged with IP:", ip);
+              } else {
+                console.warn("⚠️ No valid IP to log:", ip);
+              }
+            } catch (err) {
+              console.error("❌ Log failed:", err);
+            }
+          }
+
+      async function sendLogToMongo(email, ip, result) {
+      const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
+      await fetch(apiURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, ip, result })
+      });
+    }
+
+      async function verifyTotp() {
+        const code = document.getElementById("totpCode").value.trim();
+        if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");
+
+        const expected = await generateTOTP(totpSecret);
+        if (code !== expected) return setStatus("❌ Invalid code. Try again.");
+
+        const docRef = doc(db, "users", tempUser.uid);
+        const userDoc = await getDoc(docRef);
+        if (!userDoc.data().totpSecret) {
+          await updateDoc(docRef, { totpSecret });
+        }
+
+       if (document.getElementById("rememberDevice").checked) {
+        const ip = await getUserIP();
+
+        localStorage.setItem(`remember_${tempUser.uid}`, "yes");
+        const docRef = doc(db, "users", tempUser.uid);
+        await updateDoc(docRef, {
+          knownIPs: arrayUnion(ip)
+        });
+      }
+
+
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
         await logAccess(tempUser.email, 'success');
         redirectToDashboard(userDoc.data().role || "user");
         console.log("✅ Scucess", userDoc.data().role);
@@ -481,4 +587,8 @@
     </script>
     </div>
   </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16

@@ -4,7 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard - TrustShield</title>
+<<<<<<< HEAD
   <link rel="icon" type="image/png" href="./TrustShield.png">
+=======
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -80,6 +84,7 @@
     background: #111a3d;
   }
 
+<<<<<<< HEAD
   .top-buttons {
   display: flex;
   justify-content: flex-end;
@@ -88,6 +93,8 @@
   }
 
 
+=======
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   .table-container {
     overflow-x: auto;
     width: 100%;
@@ -149,11 +156,17 @@
 </head>
 <body>
   <div class="dashboard">
+<<<<<<< HEAD
     <div class="top-buttons">
       <button id="profileBtn">Go to My Profile</button>
       <button id="logoutBtn">Logout</button>
     </div>
     <h1>Admin Dashboard</h1>
+=======
+    <button id="logoutBtn">Logout</button>
+    <h1>Admin Dashboard fffffff</h1>
+
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
     <div class="section">
       <h2>All Users</h2>
       <div class="search-bar">
@@ -166,6 +179,7 @@
         </table>
       </div>
 
+<<<<<<< HEAD
       <div class="section">
         <h2>Access Logs</h2>
           <div class="search-bar">
@@ -180,6 +194,20 @@
               <tbody></tbody>
             </table>
           </div>
+=======
+    <div class="section">
+      <h2>Access Logs</h2>
+      <div class="search-bar">
+        <input type="text" id="logSearchEmail" placeholder="Search log by email..." />
+        <input type="date" id="logSearchDate" />
+      </div>
+      <canvas id="logChart"></canvas>
+      <div class="table-container">
+        <table id="logTable">
+          <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
+          <tbody></tbody>
+        </table>
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
       </div>
     </div>
   </div>
@@ -224,6 +252,7 @@
     }
     
     async function loadLogs() {
+<<<<<<< HEAD
       try {
         const res = await fetch('https://trustshield.onrender.com/logs');
         const data = await res.json();
@@ -294,6 +323,46 @@
         });
       }
 
+=======
+      const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
+      allLogs = snapshot.docs.map(doc => doc.data());
+      renderLogs();
+      renderChart();
+    }
+
+    function renderUsers() {
+      const keyword = document.getElementById("userSearchInput").value.toLowerCase();
+      const table = document.querySelector('#userTable tbody');
+      table.innerHTML = '';
+      allUsers
+        .filter(user => (user.email || '').toLowerCase().includes(keyword))
+        .forEach(data => {
+          const row = `<tr><td>${data.email}</td><td>${data.role}</td><td>${(data.knownIps || []).join('<br>')}</td></tr>`;
+          table.innerHTML += row;
+        });
+    }
+
+    function renderLogs() {
+      const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
+      const dateFilter = document.getElementById("logSearchDate").value;
+      const table = document.querySelector('#logTable tbody');
+      table.innerHTML = '';
+      allLogs
+        .filter(log => {
+          const matchEmail = (log.email || '').toLowerCase().includes(emailKeyword);
+          const ts = log.timestamp?.toDate?.();
+          const matchDate = !dateFilter || (ts && ts.toISOString().slice(0, 10) === dateFilter);
+          return matchEmail && matchDate;
+        })
+        .forEach(data => {
+          const ts = data.timestamp?.toDate?.();
+          const timeStr = ts ? ts.toLocaleString() : 'Invalid Timestamp';
+          const row = `<tr><td>${timeStr}</td><td>${data.email}</td><td>${data.ip}</td><td>${data.result}</td></tr>`;
+          table.innerHTML += row;
+        });
+    }
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
 
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
@@ -331,6 +400,7 @@
 
 
     document.getElementById("userSearchInput").addEventListener("input", renderUsers);
+<<<<<<< HEAD
     document.getElementById("logSearchEmail").addEventListener("input", () => {
   renderLogs();
   renderChart();  
@@ -340,14 +410,19 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
   renderChart();  
     });
 
+=======
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
     document.getElementById("logSearchEmail").addEventListener("input", renderLogs);
     document.getElementById("logSearchDate").addEventListener("change", renderLogs);
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
     });
+<<<<<<< HEAD
     document.getElementById('profileBtn').addEventListener('click', () => {
     window.location.href = '/profile.html'; 
     });
+=======
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   </script>
 </body>
 </html>

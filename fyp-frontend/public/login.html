@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - TrustShield</title>
+<<<<<<< HEAD
   <link rel="icon" type="image/png" href="./TrustShield.png">
+=======
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
       * {
@@ -215,6 +219,18 @@
         if (e.key === "Enter") await verifyTotp();
       });
 
+<<<<<<< HEAD
+=======
+      async function getUserIP() {
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const data = await res.json();
+          return data.ip;
+        } catch (e) {
+          return 'unknown';
+        }
+      }
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
       function generateSecret() {
       const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
       let secret = '';
@@ -255,7 +271,12 @@
           const email = document.getElementById("email").value;
           const password = document.getElementById("password").value;
           const remember = document.getElementById("rememberDevice").checked;
+<<<<<<< HEAD
 
+=======
+          const currentIP = await getUserIP();
+          console.log("📱 currentIP =", currentIP)
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
           try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
             const user = cred.user;
@@ -267,9 +288,27 @@
             if (!userDoc.exists()) return setStatus("❌ User role not found.");
 
             const userData = userDoc.data();
+<<<<<<< HEAD
             await logAccess(user.email, 'success');
             return redirectToDashboard(userData.role);
 
+=======
+            const currentIP = await getUserIP();
+            const knownIPs = userData.knownIPs || [];
+           // console.log("✅ Scucess", userDoc.data().role);
+           // redirectToDashboard(userDoc.data().role || "user");
+            
+
+            if (knownIPs.includes(currentIP)) {
+              await logAccess(user.email, 'success');
+              return redirectToDashboard(userData.role);
+            }
+
+            if (localStorage.getItem(`remember_${user.uid}`) === "yes") {
+              await logAccess(user.email, 'success');
+              return redirectToDashboard(userData.role);
+            }
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
             if (!userData.totpSecret) {
               totpSecret = generateSecret();
               const otpauth = getOtpAuthUrl(user.email, totpSecret);
@@ -282,14 +321,19 @@
               setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Enter or click Verify.");
               return;
             }
+<<<<<<< HEAD
 
             // Existing TOTP
+=======
+            // User has existing TOTP
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
             totpSecret = userData.totpSecret;
             tempUser = user;
             document.getElementById("totp-section").style.display = 'block';
             setStatus("✅ Enter 6-digit code from your Authenticator app.");
 
           } catch (err) {
+<<<<<<< HEAD
             console.error("🔥 Login failed:", err.message);
             await logAccess(email, 'failed');
             if (email) {
@@ -334,6 +378,39 @@
           console.error("❌ logAccess failed:", err);
         }
       }
+=======
+          const ip = await getUserIP();
+          console.error("🔥 Login failed:", err.message);
+          console.log("📥 Logging failure attempt | Email:", email, "| IP:", ip);
+          await logAccess(email, 'failed');
+          setStatus("❌ " + err.message);
+         }
+        }
+          async function logAccess(email, result) {
+          console.log(`📤 logAccess() called: email=${email}, result=${result}`);
+          try {
+            const ip = await getUserIP();
+
+            await addDoc(collection(db, 'logs'), {
+              email,
+              ip,
+              result,
+              timestamp: serverTimestamp()
+            });
+            console.log("✅ Logged to Firestore:", { email, ip, result });
+
+            await fetch('https://trustshield.onrender.com/logs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, ip, result })
+            });
+            console.log("✅ Logged to MongoDB:", { email, ip, result });
+
+          } catch (err) {
+            console.error("❌ logAccess failed:", err);
+          }
+        }
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
       async function verifyTotp() {
         const code = document.getElementById("totpCode").value.trim();
         if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");
@@ -348,11 +425,19 @@
         }
 
        if (document.getElementById("rememberDevice").checked) {
+<<<<<<< HEAD
+=======
+        const ip = await getUserIP(); 
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
 
         localStorage.setItem(`remember_${tempUser.uid}`, "yes");
         const docRef = doc(db, "users", tempUser.uid);
         await updateDoc(docRef, {
+<<<<<<< HEAD
           knownIPs: arrayUnion(window._lastLoginIP || "unknown")
+=======
+          knownIPs: arrayUnion(ip)
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
         });
       }
 

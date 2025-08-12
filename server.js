@@ -186,18 +186,3 @@ app.get('/get-ip', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ FYP Server running on port ${PORT}`);
 });
-// ===== GET /test-email - Simple email test =====
-app.get('/test-email', async (req, res) => {
-  try {
-    await transporter.sendMail({
-      from: process.env.ALERT_EMAIL_USER || 'wongsjun.24@gmail.com',
-      to: '你的收件邮箱@gmail.com',
-      subject: '📧 Test Email from FYP Server',
-      text: '如果你看到这封邮件，说明邮件功能正常。'
-    });
-    res.send('✅ Test email sent successfully');
-  } catch (err) {
-    console.error('❌ Email test failed:', err.message);
-    res.status(500).send('❌ Failed to send test email: ' + err.message);
-  }
-});

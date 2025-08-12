@@ -48,14 +48,14 @@ function getClientIp(req) {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.ALERT_EMAIL_USER || 'youradmin@gmail.com',
-    pass: process.env.ALERT_EMAIL_PASS || 'yourpassword'
+    user: process.env.ALERT_EMAIL_USER || 'wongsjun.24@gmail.com',
+    pass: process.env.ALERT_EMAIL_PASS || 'spof otzb mvzs fgrr'
   }
 });
 
 // ===== Firebase Admin SDK Init =====
 admin.initializeApp({
-  credential: admin.credential.applicationDefault() // 确保部署时有正确的 service account
+  credential: admin.credential.applicationDefault() 
 });
 const firestore = admin.firestore();
 

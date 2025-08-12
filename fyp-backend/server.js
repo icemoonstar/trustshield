@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend'); // ✅ Resend SDK
 const admin = require('firebase-admin'); // ✅ Firestore Admin SDK
 require('dotenv').config();
 const app = express();
@@ -44,14 +44,8 @@ function getClientIp(req) {
   return ip;
 }
 
-// ===== Email Transporter =====
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.ALERT_EMAIL_USER || 'wongsjun.24@gmail.com',
-    pass: process.env.ALERT_EMAIL_PASS || 'spof otzb mvzs fgrr'
-  }
-});
+// ===== Resend Init =====
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ===== Firebase Admin SDK Init =====
 admin.initializeApp({
@@ -69,10 +63,10 @@ app.post('/logs', async (req, res) => {
       return res.status(400).json({ message: 'Email and result are required' });
     }
 
-    // 写 MongoDB
+  
     await new AccessLog({ email, ip, result }).save();
 
-    // 写 Firestore
+    
     await firestore.collection("logs").add({
       email,
       ip,
@@ -137,14 +131,13 @@ app.post('/failed-login', async (req, res) => {
         if (adminEmails.length === 0) {
           console.warn('⚠️ No admin emails found in Firestore to send alert');
         } else {
-          const mailOptions = {
-            from: process.env.ALERT_EMAIL_USER || 'wongsjun.24@gmail.com',
+          await resend.emails.send({
+            from: 'alert@resend.dev', 
             to: adminEmails,
             subject: `🚨 Security Alert: Multiple Failed Logins for ${email}`,
             text: `Attention:\n\nThere have been ${failCount} failed login attempts for ${email} from IP ${ip} within the last 10 minutes.\n\nPlease investigate immediately.`
-          };
+          });
 
-          await transporter.sendMail(mailOptions);
           console.log(`📧 Alert emails sent to: ${adminEmails.join(', ')}`);
         }
       } catch (emailErr) {
@@ -159,7 +152,6 @@ app.post('/failed-login', async (req, res) => {
     res.status(500).json({ message: 'Error recording failed login', error: err.message });
   }
 });
-
 
 // ===== GET /failed-login - Debug route =====
 app.get('/failed-login', (req, res) => {

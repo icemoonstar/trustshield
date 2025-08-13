@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - TrustShield</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #1d2b64, #f8cdda);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn 1.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+  .container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      animation: slideIn 0.8s ease-in-out;
+      text-align: center;
+  }
+
+      @keyframes slideIn {
+        from { transform: translateY(-40px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      .logo {
+        width: 185px;
+        height: auto;
+        animation: logoPop 0.8s ease-in-out;
+      }
+
+      @keyframes logoPop {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      h1 {
+        font-size: 26px;
+        color: #1d2b64;
+        margin-bottom: 25px;
+      }
+
+      input[type="email"],
+      input[type="password"],
+      input[type="text"] {
+        width: 100%;
+        padding: 12px 15px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: 0.3s;
+      }
+
+      input:focus {
+        border-color: #1d2b64;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(29, 43, 100, 0.2);
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background: #1d2b64;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+
+      button:hover {
+        background: #111a3d;
+        transform: translateY(-2px);
+      }
+
+      #status {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #d8000c;
+      }
+
+      p {
+        margin-top: 20px;
+        font-size: 14px;
+      }
+
+      a {
+        color: #1d2b64;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      #reset-section, #totp-section, #totp-setup {
+        display: none;
+        margin-top: 20px;
+      }
+
+      #qrImage {
+        margin-top: 10px;
+      }
+
+      footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrustShield</title>
+  <link rel="icon" type="image/png" href="./TrustShield.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+    <img src="../TrustShield.png" alt="TrustShield Logo" class="logo">
+    <h1>Login1111</h1>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <label><input type="checkbox" id="rememberDevice"> Remember this device</label><br>
+    <button id="loginBtn">Login</button>
+    <p><a href="#" onclick="toggleReset()">Forgot password?</a></p>
+    <p>Don't have an account? <a href="index.html">Register here</a></p>
+
+    <!-- Reset password section -->
+    <div id="reset-section">
+      <h3>Reset Password</h3>
+      <input type="email" id="reset-email" placeholder="Enter your email"><br>
+      <button id="resetBtn">Send Reset Email</button>
+    </div>
+
+    <!-- TOTP section -->
+    <div id="totp-section">
+      <h3>Multi-Factor Authentication</h3>
+      <div id="totp-setup">
+        <p>Scan this QR code with Google Authenticator:</p>
+        <img id="qrImage" src="" width="200"><br>
+        <p>Then enter the 6-digit code below:</p>
+      </div>
+      <input type="text" id="totpCode" placeholder="Enter 6-digit code"><br>
+      <button id="verifyTotpBtn">Verify & Login</button>
+    </div>
+
+    <p id="status"></p>
+    <!-- Firebase SDK + Lightweight Browser-Compatible TOTP -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+        sendPasswordResetEmail
+      } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        updateDoc,
+        addDoc,
+        collection,
+        serverTimestamp,
+        arrayUnion
+      } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
+        authDomain: "firm-source-440003-a8.firebaseapp.com",
+        projectId: "firm-source-440003-a8"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      let tempUser = null;
+      let totpSecret = null;
+      let qrDisplayed = false;
+
+      document.getElementById("loginBtn").addEventListener("click", login);
+      document.getElementById("resetBtn").addEventListener("click", resetPassword);
+      document.getElementById("verifyTotpBtn").addEventListener("click", verifyTotp);
+
+      document.getElementById("totpCode").addEventListener("keyup", async (e) => {
+        if (e.key === "Enter") await verifyTotp();
+      });
+
+      async function getUserIP() {
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const data = await res.json();
+          return data.ip;
+        } catch (e) {
+          return 'unknown';
+        }
+      }
+      function generateSecret() {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        let secret = '';
+        for (let i = 0; i < 32; i++) secret += charset.charAt(Math.floor(Math.random() * charset.length));
+        return secret;
+      }
+
+      // *** CHANGED: fixed to use template literal + encodeURIComponent for label ***
+      function getOtpAuthUrl(userEmail, secret) {
+        const label = `TrustShield:${userEmail}`;
+        return `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=TrustShield`;
+      }
+
+      async function generateTOTP(secret) {
+        let key = base32ToBytes(secret);
+        const epoch = Math.floor(Date.now() / 1000);
+        let time = Math.floor(epoch / 30);
+        const msg = new Uint8Array(8);
+        for (let i = 7; i >= 0; --i) {
+          msg[i] = time & 0xff;
+          time >>= 8;
+        }
+        const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+        const hmac = await crypto.subtle.sign('HMAC', cryptoKey, msg);
+        const offset = new Uint8Array(hmac)[19] & 0xf;
+        const binCode = (new DataView(hmac).getUint32(offset) & 0x7fffffff) % 1000000;
+        return binCode.toString().padStart(6, '0');
+      }
+
+      function base32ToBytes(base32) {
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        let bits = '';
+        for (const char of base32) bits += alphabet.indexOf(char.toUpperCase()).toString(2).padStart(5, '0');
+        const bytes = [];
+        for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.substr(i, 8), 2));
+        return new Uint8Array(bytes);
+      }
+
+      // *** ADDED: setupTOTP -> generate secret, save to Firestore, and show QR ***
+      async function setupTOTP(user) {
+        try {
+          // generate secret (use existing generateSecret)
+          totpSecret = generateSecret();
+
+          // save to Firestore (user doc must exist based on your flow)
+          const docRef = doc(db, "users", user.uid);
+          try {
+            await updateDoc(docRef, { totpSecret });
+          } catch (e) {
+            // If updateDoc fails (unlikely since you already checked doc exists), log but continue
+            console.warn("Could not update totpSecret in Firestore:", e);
+          }
+
+          // build otpauth URL and QR
+          const otpauth = getOtpAuthUrl(user.email, totpSecret);
+          // *** CHANGED: use template literal so encodeURIComponent runs ***
+          document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(otpauth)}&size=200x200`;
+
+          // show QR section
+          document.getElementById("totp-setup").style.display = 'block';
+          document.getElementById("totp-section").style.display = 'block';
+          tempUser = user;
+          qrDisplayed = true;
+          setTimeout(() => {
+            if (qrDisplayed) document.getElementById("totp-setup").style.display = 'none';
+          }, 50000); // hide after 50 seconds
+
+          await logAccess(user.email, 'waiting');
+          setStatus("📲 Scan the QR code using Google Authenticator, enter the 6-digit code and press Enter or click Verify.");
+        } catch (err) {
+          console.error("setupTOTP error:", err);
+        }
+      }
+
+        async function login() {
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+          const remember = document.getElementById("rememberDevice").checked;
+          const currentIP = await getUserIP();
+          console.log("📱 currentIP =", currentIP)
+          try {
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            const user = cred.user;
+
+            if (!user.emailVerified) return setStatus("⚠️ Please verify your email before login.");
+
+            const docRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(docRef);
+            if (!userDoc.exists()) return setStatus("❌ User role not found.");
+
+            const userData = userDoc.data();
+            // *** REMOVED duplicate redeclaration of currentIP here (keeps first currentIP) ***
+            const knownIPs = userData.knownIPs || [];
+           // console.log("✅ Scucess", userDoc.data().role);
+           // redirectToDashboard(userDoc.data().role || "user");
+            
+
+            if (knownIPs.includes(currentIP)) {
+              await logAccess(user.email, 'success');
+              return redirectToDashboard(userData.role);
+            }
+
+            if (localStorage.getItem(`remember_${user.uid}`) === "yes") {
+              await logAccess(user.email, 'success');
+              return redirectToDashboard(userData.role);
+            }
+
+            // *** CHANGED: call setupTOTP() to generate & store secret and show QR ***
+            if (!userData.totpSecret) {
+              await setupTOTP(user);
+              return;
+            }
+
+            // User has existing TOTP
+            totpSecret = userData.totpSecret;
+            tempUser = user;
+            document.getElementById("totp-section").style.display = 'block';
+            setStatus("✅ Enter 6-digit code from your Authenticator app.");
+
+            } catch (err) {
+                const email = document.getElementById("email").value;
+
+                // Log to /logs
+                try { 
+                    await logAccess(email, 'failed'); 
+                } catch (e) {
+                    console.error("Error logging to /logs:", e);
+                }
+
+                // Log to /failed-login
+                try { 
+                    await logFailedLogin(email); 
+                } catch (e) {
+                    console.error("Error logging to /failed-login:", e);
+                }
+
+                setStatus("❌ " + err.message);
+                }
+            }
+           async function logAccess(email, result, isFailed = false) {
+            try {
+              // Step 1: Get IP from backend
+              const res = await fetch('https://trustshield.onrender.com/logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, result })
+              });
+
+              const data = await res.json();
+              const ip = data.ipUsed || "unknown";
+
+              // Step 2: Save to Firestore
+              await addDoc(collection(db, 'logs'), {
+                email,
+                ip,
+                result,
+                timestamp: serverTimestamp()
+              });
+              console.log(`✅ ${result} log recorded with IP:`, ip);
+
+              // Step 3: If failed login, send extra request
+              if (isFailed) {
+                await fetch("https://trustshield.onrender.com/failed-login", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, ip })
+                });
+                console.log("📩 Failed login alert sent");
+              }
+
+            } catch (err) {
+              console.error("❌ Logging error:", err);
+            }
+          }
+            // Function to log failed login attempts
+           async function logFailedLogin(email) {
+            try {
+                const response = await fetch("https://trustshield.onrender.com/failed-login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: String(email),  
+                        ip: ipAddress || ""   
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error("Failed to log failed login:", response.statusText);
+                } else {
+                    console.log("Failed login logged successfully");
+                }
+            } catch (error) {
+                console.error("Error logging failed login:", error);
+            }
+        }
+              async function sendLogToMongo(email, ip, result) {
+              const apiURL = "https://fyp-1-xbt3.onrender.com/logs";
+              await fetch(apiURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, ip, result })
+              });
+            }
+
+              async function verifyTotp() {
+                const code = document.getElementById("totpCode").value.trim();
+                if (!code || !totpSecret) return setStatus("❌ Missing code or secret.");
+
+                const expected = await generateTOTP(totpSecret);
+                if (code !== expected) return setStatus("❌ Invalid code. Try again.");
+
+                const docRef = doc(db, "users", tempUser.uid);
+                const userDoc = await getDoc(docRef);
+                if (!userDoc.data().totpSecret) {
+                  await updateDoc(docRef, { totpSecret });
+                }
+
+              if (document.getElementById("rememberDevice").checked) {
+                const ip = await getUserIP();
+
+                localStorage.setItem(`remember_${tempUser.uid}`, "yes");
+                const docRef = doc(db, "users", tempUser.uid);
+                await updateDoc(docRef, {
+                  knownIPs: arrayUnion(ip)
+                });
+              }
+        await logAccess(tempUser.email, 'success');
+        redirectToDashboard(userDoc.data().role || "user");
+        console.log("✅ Scucess", userDoc.data().role);
+      }
+
+      function redirectToDashboard(role) {
+        setStatus("✅ Login successful. Redirecting...");
+        window.location.href = role === "admin" ? "admin.html" : "user.html";
+      }
+
+      function resetPassword() {
+        const email = document.getElementById("reset-email").value.trim();
+        if (!email) return setStatus("❌ Please enter your email address.");
+
+        sendPasswordResetEmail(auth, email)
+          .then(() => setStatus("✅ Reset email sent. Check your inbox (or spam folder)."))
+          .catch(err => setStatus("❌ " + err.message));
+      }
+
+      function toggleReset() {
+        const resetSection = document.getElementById("reset-section");
+        resetSection.style.display = resetSection.style.display === 'block' ? 'none' : 'block';
+      }
+      window.toggleReset = toggleReset;
+
+      function setStatus(msg) {
+        document.getElementById("status").innerText = msg;
+      }
+    </script>
+    </div>
+  </body>
+</html>

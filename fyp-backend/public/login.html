@@ -346,7 +346,7 @@
             } catch (err) {
                 // Log to /logs
                 try { 
-                    await logAccess(emailValue, 'failed'); 
+                    await logAccess(email, 'failed');
                 } catch (e) {
                     console.error("Error logging to /logs:", e);
                 }
@@ -361,41 +361,30 @@
                 setStatus("❌ " + err.message);
                 }
             }
-           async function logAccess(email, result, isFailed = false) {
-            try {
-              // Step 1: Get IP from backend
-              const res = await fetch('https://trustshield.onrender.com/logs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, result })
-              });
-
-              const data = await res.json();
-              const ip = data.ipUsed || "unknown";
-
-              // Step 2: Save to Firestore
-              await addDoc(collection(db, 'logs'), {
-                email,
-                ip,
-                result,
-                timestamp: serverTimestamp()
-              });
-              console.log(`✅ ${result} log recorded with IP:`, ip);
-
-              // Step 3: If failed login, send extra request
-              if (isFailed) {
-                await fetch("https://trustshield.onrender.com/failed-login", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email, ip })
+            async function logAccess(email, result, isFailed = false) {
+              try {
+                const res = await fetch('https://trustshield.onrender.com/logs', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, result })
                 });
-                console.log("📩 Failed login alert sent");
-              }
 
-            } catch (err) {
-              console.error("❌ Logging error:", err);
+                const data = await res.json();
+                console.log(`✅ ${result} log recorded with IP:`, data.ipUsed || "unknown");
+
+                if (isFailed) {
+                  await fetch("https://trustshield.onrender.com/failed-login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, ip: data.ipUsed || "unknown" })
+                  });
+                  console.log("📩 Failed login alert sent");
+                }
+              } catch (err) {
+                console.error("❌ Logging error:", err);
+              }
             }
-          }
+
             // Function to log failed login attempts
            async function logFailedLogin(email,ip) {
             try {

@@ -6,15 +6,14 @@ const bodyParser = require('body-parser');
 const { Resend } = require('resend');
 const admin = require('firebase-admin');
 require('dotenv').config();
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ 让 Express 信任 Render 的反向代理头
 app.set('trust proxy', true);
-
 app.use(cors());
 app.use(bodyParser.json());
+
+
 
 // ===== MongoDB connection =====
 const mongoURI = process.env.MONGO_URI || 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
@@ -56,13 +55,13 @@ function getClientIp(req) {
 // ===== Resend Init =====
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ===== Firebase Admin SDK Init (Render 环境可用) =====
-// 把 Firebase 服务账号 JSON 存到 Render 环境变量 FIREBASE_SERVICE_ACCOUNT_JSON
+// ===== Firebase Admin SDK Init =====
 let serviceAccount;
 try {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG); 
 } catch (err) {
-  console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:", err.message);
+  console.error("❌ Failed to parse FIREBASE_CONFIG:", err.message);
+  process.exit(1); 
 }
 
 admin.initializeApp({

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - TrustShield</title>
+  <link rel="icon" type="image/png" href="./TrustShield.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #1d2b64, #f8cdda);
+    min-height: 100vh;
+    padding: 20px;
+    animation: fadeIn 1.2s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .dashboard {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  h1, h2 {
+    color: #1d2b64;
+    margin-bottom: 16px;
+    padding-bottom: 4px;
+  }
+
+  .section {
+    margin-bottom: 40px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fdfdfd;
+  }
+
+  .search-bar {
+    margin-bottom: 16px;
+  }
+
+  .search-bar input {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 100%;
+    max-width: 300px;
+    margin-right: 10px;
+  }
+
+  button {
+    background: #1d2b64;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    float: right;
+    margin-bottom: 20px;
+  }
+
+  button:hover {
+    background: #111a3d;
+  }
+
+  .top-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px; 
+  margin-bottom: 20px;
+  }
+
+
+  .table-container {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-container table {
+    width: 100%;
+    table-layout: fixed;
+    word-wrap: break-word;
+    min-width: 600px;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  th, td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+    word-break: break-word;
+  }
+
+  th {
+    background-color: #f0f0f0;
+  }
+
+  canvas {
+    max-width: 250px;
+    margin: 10px auto 20px auto;
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+  }
+
+  @media screen and (max-width: 600px) {
+    .search-bar input {
+      width: 100%;
+      margin: 8px 0;
+    }
+
+    button {
+      float: none;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    table, th, td {
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    canvas {
+      max-width: 100% !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="top-buttons">
+      <button id="profileBtn">Go to My Profile</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+    <h1>Admin Dashboard</h1>
+    <div class="section">
+      <h2>All Users</h2>
+      <div class="search-bar">
+        <input type="text" id="userSearchInput" placeholder="Search user by email..." />
+      </div>
+      <div class="table-container">
+        <table id="userTable">
+          <thead><tr><th>Email</th><th>Role</th><th>Known IPs</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Access Logs</h2>
+          <div class="search-bar">
+            <input type="text" id="logSearchEmail" placeholder="Search log by email..." />
+            <input type="date" id="logSearchDate" />
+          </div>
+          <canvas id="logChart"></canvas>
+          <div class="table-container">
+            <table id="logTable">
+              <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
+              <tbody id="logTableBody"></tbody>
+              <tbody></tbody>
+            </table>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    orderBy
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
+      authDomain: "firm-source-440003-a8.firebaseapp.com",
+      projectId: "firm-source-440003-a8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let allUsers = [];
+    let allLogs = [];
+    let logChart;
+
+    const chartCtx = document.getElementById('logChart').getContext('2d');
+
+    onAuthStateChanged(auth, user => {
+      if (!user) return location.href = 'login.html';
+      loadUsers();
+      loadLogs();
+    });
+
+    async function loadUsers() {
+      const snapshot = await getDocs(collection(db, 'users'));
+      allUsers = snapshot.docs.map(doc => doc.data());
+      renderUsers();
+    }
+    
+    async function loadLogs() {
+      try {
+        const res = await fetch('https://trustshield.onrender.com/logs');
+        const data = await res.json();
+
+        allLogs = data.map(log => ({
+          ...log,
+          timestamp: new Date(log.timestamp)
+        }));
+
+        renderLogs();
+        renderChart();
+      } catch (err) {
+        console.error('❌ Failed to load logs from MongoDB:', err);
+      }
+    }
+
+
+    function renderUsers() {
+    const keyword = document.getElementById("userSearchInput").value.toLowerCase();
+    const table = document.querySelector('#userTable tbody');
+    table.innerHTML = '';
+    allUsers
+      .filter(user => (user.email || '').toLowerCase().includes(keyword))
+      .forEach(data => {
+        const ips = (data.knownIPs || []).map(ip => `<a href="https://ipinfo.io/${ip}" target="_blank">${ip}</a>`).join('<br>') || '—';
+        const row = `<tr><td>${data.email}</td><td>${data.role}</td><td>${ips}</td></tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    function renderLogs() {
+        const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
+        const dateFilter = document.getElementById("logSearchDate").value;
+        const logTable = document.getElementById("logTableBody");
+        logTable.innerHTML = '';
+
+        const filteredLogs = allLogs.filter(log => {
+          const matchEmail = (log.email || '').toLowerCase().includes(emailKeyword);
+          let matchDate = true;
+
+          if (dateFilter) {
+            const selectedDate = new Date(dateFilter);
+            const ts = log.timestamp?.seconds
+              ? new Date(log.timestamp.seconds * 1000)
+              : new Date(log.timestamp);
+            matchDate =
+              ts.getFullYear() === selectedDate.getFullYear() &&
+              ts.getMonth() === selectedDate.getMonth() &&
+              ts.getDate() === selectedDate.getDate();
+          }
+
+          return matchEmail && matchDate;
+        });
+
+        filteredLogs.forEach(log => {
+          const ts = log.timestamp?.seconds
+            ? new Date(log.timestamp.seconds * 1000)
+            : new Date(log.timestamp);
+          const timeStr = ts.toLocaleString();
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${timeStr}</td>
+            <td>${log.email || "N/A"}</td>
+            <td>${log.ip || "N/A"}</td>
+            <td>${log.result || "N/A"}</td>
+          `;
+          logTable.appendChild(row);
+        });
+      }
+
+        function renderChart() {
+      const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
+      allLogs.forEach(log => {
+        const result = (log.result || '').toLowerCase();
+        if (result === 'success') resultCounts.success++;
+        else if (result === 'failed') resultCounts.failed++; // <- match actual data
+      });
+
+      const chartData = {
+        labels: ['Success', 'Failed'],  // <- update label
+        datasets: [{
+          data: [resultCounts.success, resultCounts.failed],  // <- match key
+          backgroundColor: ['#4caf50', '#e53935']
+        }]
+      };
+
+      if (logChart) {
+        logChart.data = chartData;
+        logChart.update();
+      } else {
+        logChart = new Chart(chartCtx, {
+          type: 'pie',
+          data: chartData,
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' },
+              title: { display: true, text: 'Access Attempt Summary' }
+            }
+          }
+        });
+      }
+    }
+
+
+    document.getElementById("userSearchInput").addEventListener("input", renderUsers);
+    document.getElementById("logSearchEmail").addEventListener("input", () => {
+  renderLogs();
+  renderChart();  
+    });
+document.getElementById("logSearchDate").addEventListener("change", () => {
+  renderLogs();
+  renderChart();  
+    });
+
+    document.getElementById("logSearchEmail").addEventListener("input", renderLogs);
+    document.getElementById("logSearchDate").addEventListener("change", renderLogs);
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth).then(() => location.href = 'login.html');
+    });
+    document.getElementById('profileBtn').addEventListener('click', () => {
+    window.location.href = '/profile.html'; 
+    });
+  </script>
+</body>
+</html>

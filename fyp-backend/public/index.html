@@ -147,10 +147,15 @@
     <h1>Register Account</h1>                         
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
+<<<<<<< HEAD
 
     <input type="text" id="name" placeholder="Full Name">
     <input type="tel" id="phone" placeholder="Phone Number">
 
+=======
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="tel" id="phone" placeholder="Phone Number">
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
     <button onclick="register()">Register</button>
     <p id="status"></p>
     <p>Already have an account? <a href="login.html">Login here</a></p>
@@ -178,10 +183,15 @@
 
     function register() {
       const email = document.getElementById('email').value.trim();
+<<<<<<< HEAD
 
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
 
+=======
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
       const password = document.getElementById('password').value;
 
       if (!validatePassword(password)) {
@@ -194,12 +204,20 @@
         .then(cred => {
           cred.user.sendEmailVerification();
           return db.collection("users").doc(cred.user.uid).set({
+<<<<<<< HEAD
 
             email: email,
             name: name,
             phone: phone,
             role: "user",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
+=======
+             email: email,
+            name: name,
+            phone: phone,
+            role: "user",
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
           });
         })
         .then(() => {

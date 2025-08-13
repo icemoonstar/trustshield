@@ -1,0 +1,32 @@
+{
+  "name": "fyp-folder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+<<<<<<< HEAD
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.4.0",
+    "mongodb": "^6.18.0",
+    "mongoose": "^8.17.1",
+    "nodemailer": "^7.0.5",
+    "pg": "^8.16.3",
+    "resend": "^6.0.1"
+=======
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "firebase-admin": "^11.10.0",
+    "mongoose": "^8.16.0"
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
+  }
+}

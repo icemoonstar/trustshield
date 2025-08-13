@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard - TrustShield</title>
+<<<<<<< HEAD
 
   <link rel="icon" type="image/png" href="./TrustShield.png">
   
 
+=======
+  <link rel="icon" type="image/png" href="./TrustShield.png">
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -83,7 +87,10 @@
     background: #111a3d;
   }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
   .top-buttons {
   display: flex;
   justify-content: flex-end;
@@ -153,7 +160,10 @@
 </head>
 <body>
   <div class="dashboard">
+<<<<<<< HEAD
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
     <div class="top-buttons">
       <button id="profileBtn">Go to My Profile</button>
       <button id="logoutBtn">Logout</button>
@@ -171,7 +181,10 @@
         </table>
       </div>
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
       <div class="section">
         <h2>Access Logs</h2>
           <div class="search-bar">
@@ -186,6 +199,7 @@
               <tbody></tbody>
             </table>
           </div>
+<<<<<<< HEAD
     <div class="section">
       <h2>Access Logs</h2>
       <div class="search-bar">
@@ -199,6 +213,8 @@
           <tbody id="logTableBody"></tbody>
         </table>
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
       </div>
     </div>
   </div>
@@ -314,6 +330,7 @@
         });
       }
 
+<<<<<<< HEAD
 
       const logTable = document.getElementById("logTableBody");
       logTable.innerHTML = "";
@@ -356,6 +373,8 @@
         logTable.appendChild(row);
       });
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
       allLogs.forEach(log => {
@@ -401,7 +420,10 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
   renderChart();  
     });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
     document.getElementById("logSearchEmail").addEventListener("input", renderLogs);
     document.getElementById("logSearchDate").addEventListener("change", renderLogs);
     document.getElementById("logoutBtn").addEventListener("click", () => {
@@ -410,10 +432,13 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
     document.getElementById('profileBtn').addEventListener('click', () => {
     window.location.href = '/profile.html'; 
     });
+<<<<<<< HEAD
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
     });
 
+=======
+>>>>>>> 585aeedc4a257aee72c1858c3b4e2c56db3f3a56
   </script>
 </body>
 </html>

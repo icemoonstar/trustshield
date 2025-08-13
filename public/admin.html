@@ -6,8 +6,7 @@
   <title>Admin Dashboard - TrustShield</title>
 
   <link rel="icon" type="image/png" href="./TrustShield.png">
-
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,7 +15,8 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-  
+  }
+
   body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, #1d2b64, #f8cdda);
@@ -25,7 +25,7 @@
     animation: fadeIn 1.2s ease-in;
   }
 
-  @keyframes fadeIn {
+    @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
@@ -92,8 +92,6 @@
   }
 
 
-
-
   .table-container {
     overflow-x: auto;
     width: 100%;
@@ -151,7 +149,6 @@
       max-width: 100% !important;
     }
   }
-}
 </style>
 </head>
 <body>
@@ -162,11 +159,6 @@
       <button id="logoutBtn">Logout</button>
     </div>
     <h1>Admin Dashboard</h1>
-
-    <button id="logoutBtn">Logout</button>
-    <h1>Admin Dashboard fffffff</h1>
-
-
     <div class="section">
       <h2>All Users</h2>
       <div class="search-bar">
@@ -194,7 +186,6 @@
               <tbody></tbody>
             </table>
           </div>
-
     <div class="section">
       <h2>Access Logs</h2>
       <div class="search-bar">
@@ -205,7 +196,7 @@
       <div class="table-container">
         <table id="logTable">
           <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
-          <tbody></tbody>
+          <tbody id="logTableBody"></tbody>
         </table>
 
       </div>
@@ -283,6 +274,7 @@
     }
 
     function renderLogs() {
+
         const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
         const dateFilter = document.getElementById("logSearchDate").value;
         const logTable = document.getElementById("logTableBody");
@@ -323,44 +315,46 @@
       }
 
 
-      const q = query(collection(db, 'logs'), orderBy('timestamp', 'desc'));
-      const snapshot = await getDocs(q);
-      allLogs = snapshot.docs.map(doc => doc.data());
-      renderLogs();
-      renderChart();
+      const logTable = document.getElementById("logTableBody");
+      logTable.innerHTML = "";
 
-    function renderUsers() {
-      const keyword = document.getElementById("userSearchInput").value.toLowerCase();
-      const table = document.querySelector('#userTable tbody');
-      table.innerHTML = '';
-      allUsers
-        .filter(user => (user.email || '').toLowerCase().includes(keyword))
-        .forEach(data => {
-          const row = `<tr><td>${data.email}</td><td>${data.role}</td><td>${(data.knownIps || []).join('<br>')}</td></tr>`;
-          table.innerHTML += row;
-        });
-    }
+      const logSearchInput = document.getElementById("logSearchEmail").value.trim().toLowerCase();
+      const logSearchDate = document.getElementById("logSearchDate").value;
 
-    function renderLogs() {
-      const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
-      const dateFilter = document.getElementById("logSearchDate").value;
-      const table = document.querySelector('#logTable tbody');
-      table.innerHTML = '';
-      allLogs
-        .filter(log => {
-          const matchEmail = (log.email || '').toLowerCase().includes(emailKeyword);
-          const ts = log.timestamp?.toDate?.();
-          const matchDate = !dateFilter || (ts && ts.toISOString().slice(0, 10) === dateFilter);
-          return matchEmail && matchDate;
-        })
-        .forEach(data => {
-          const ts = data.timestamp?.toDate?.();
-          const timeStr = ts ? ts.toLocaleString() : 'Invalid Timestamp';
-          const row = `<tr><td>${timeStr}</td><td>${data.email}</td><td>${data.ip}</td><td>${data.result}</td></tr>`;
-          table.innerHTML += row;
-        });
-    }
+      const filteredLogs = allLogs.filter(log => {
+        const matchEmail = log.email?.toLowerCase().includes(logSearchInput);
+        let matchDate = true;
 
+        if (logSearchDate) {
+          const selectedDate = new Date(logSearchDate);
+          const ts = log.timestamp?.seconds
+            ? new Date(log.timestamp.seconds * 1000)
+            : new Date(log.timestamp);
+          matchDate =
+            ts.getDate() === selectedDate.getDate() &&
+            ts.getMonth() === selectedDate.getMonth() &&
+            ts.getFullYear() === selectedDate.getFullYear();
+        }
+
+        return matchEmail && matchDate;
+      });
+
+      filteredLogs.forEach(log => {
+        const row = document.createElement("tr");
+
+        const ts = log.timestamp?.seconds
+          ? new Date(log.timestamp.seconds * 1000)
+          : new Date(log.timestamp);
+
+        row.innerHTML = `
+          <td>${ts.toLocaleString()}</td>
+          <td>${log.email || "N/A"}</td>
+          <td>${log.ip || "N/A"}</td>
+          <td>${log.result || "N/A"}</td>
+        `;
+
+        logTable.appendChild(row);
+      });
 
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
@@ -398,7 +392,6 @@
 
 
     document.getElementById("userSearchInput").addEventListener("input", renderUsers);
-
     document.getElementById("logSearchEmail").addEventListener("input", () => {
   renderLogs();
   renderChart();  
@@ -414,11 +407,12 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
     });
-
     document.getElementById('profileBtn').addEventListener('click', () => {
     window.location.href = '/profile.html'; 
     });
-
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth).then(() => location.href = 'login.html');
+    });
 
   </script>
 </body>

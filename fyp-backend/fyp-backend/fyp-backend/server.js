@@ -1,26 +1,20 @@
-// ===== server.js =====
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Resend } = require('resend');
-const admin = require('firebase-admin');
-require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-
-// ✅ 让 Express 信任 Render 的反向代理头
-app.set('trust proxy', true);
+const PORT = 4000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
 // ===== MongoDB connection =====
-const mongoURI = process.env.MONGO_URI || 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI)
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB connection error:', err.message));
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // ===== Schemas =====
 const accessLogSchema = new mongoose.Schema({
@@ -31,6 +25,7 @@ const accessLogSchema = new mongoose.Schema({
 });
 const AccessLog = mongoose.model('AccessLog', accessLogSchema);
 
+// Schema for IDS failed login attempts
 const failedLoginSchema = new mongoose.Schema({
   email: String,
   ip: String,
@@ -38,148 +33,78 @@ const failedLoginSchema = new mongoose.Schema({
 });
 const FailedLogin = mongoose.model('FailedLogin', failedLoginSchema);
 
-// ===== Helper: Get client IP =====
+// ===== Helper: Get client IP address =====
 function getClientIp(req) {
-  let ip = req.headers['x-forwarded-for'];
-  if (ip) {
-    ip = ip.split(',')[0].trim(); // 取第一个真实 IP
-  } else {
-    ip = req.connection?.remoteAddress ||
-         req.socket?.remoteAddress ||
-         req.connection?.socket?.remoteAddress ||
-         'unknown';
-  }
-  if (ip.startsWith('::ffff:')) ip = ip.substring(7);
-  return ip;
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
 }
 
-// ===== Resend Init =====
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// ===== Firebase Admin SDK Init (Render 环境可用) =====
-// 把 Firebase 服务账号 JSON 存到 Render 环境变量 FIREBASE_SERVICE_ACCOUNT_JSON
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-} catch (err) {
-  console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:", err.message);
-}
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-const firestore = admin.firestore();
-
-// ===== POST /logs =====
+// ===== POST /logs - Store access logs =====
 app.post('/logs', async (req, res) => {
   try {
     const { email, result } = req.body;
     const ip = getClientIp(req);
+    const timestamp = new Date();
 
-    if (!email || !result) {
-      return res.status(400).json({ message: 'Email and result are required' });
-    }
-
-    await new AccessLog({ email, ip, result }).save();
-    await firestore.collection("logs").add({
-      email, ip, result, timestamp: new Date()
-    });
+    // Save to MongoDB
+    const mongoLog = new AccessLog({ email, ip, result, timestamp });
+    await mongoLog.save();
 
     console.log(`✅ Logged: ${email} - ${result} - ${ip}`);
     res.status(201).json({ message: 'Log saved', ip });
   } catch (err) {
-    console.error('❌ Logging failed:', err.stack);
-    res.status(500).json({ message: 'Error saving log', error: err.message });
+    console.error('❌ Logging failed:', err);
+    res.status(500).json({ message: 'Error saving log', error: err });
   }
 });
 
-// ===== POST /failed-login =====
+// ===== POST /failed-login - Track failed login attempts for IDS =====
 app.post('/failed-login', async (req, res) => {
-  console.log("📥 /failed-login POST request received");
-  console.log("📩 Request body:", req.body);
-
   try {
-    let { email } = req.body;
+    const { email } = req.body;
     const ip = getClientIp(req);
-    console.log("📡 Detected IP:", ip);
+    if (!email) return res.status(400).json({ message: 'Email required' });
 
-    if (typeof email !== "string" || !email.trim()) {
-      console.warn("⚠️ Invalid email format received:", email);
-      return res.status(400).json({ message: 'Invalid email format' });
-    }
-    email = email.trim();
-
+    // Save failed attempt to database
     await new FailedLogin({ email, ip }).save();
-    await firestore.collection("logs").add({
-      email, ip, result: "failed", timestamp: new Date()
-    });
 
-    console.log(`✅ Saved failed login for ${email} (${ip})`);
-
-    // Count failed attempts in last 10 minutes
+    // Count failed attempts in the last 10 minutes
     const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
     const failCount = await FailedLogin.countDocuments({
-      email, timestamp: { $gte: tenMinsAgo }
+      email,
+      timestamp: { $gte: tenMinsAgo }
     });
 
     console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
 
-    // Alert admins if threshold exceeded
-    const threshold = 3;
-    if (failCount >= threshold) {
-      try {
-        const adminUsersSnapshot = await firestore.collection('users').where('role', '==', 'admin').get();
-        const adminEmails = [];
-        adminUsersSnapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.email) adminEmails.push(data.email);
-        });
-
-        if (adminEmails.length > 0) {
-          await resend.emails.send({
-            from: 'alert@resend.dev', 
-            to: adminEmails,
-            subject: `🚨 Security Alert: Multiple Failed Logins for ${email}`,
-            text: `Attention:\n\nThere have been ${failCount} failed login attempts for ${email} from IP ${ip} within the last 10 minutes.\n\nPlease investigate immediately.`
-          });
-          console.log(`📧 Alert emails sent to: ${adminEmails.join(', ')}`);
-        } else {
-          console.warn('⚠️ No admin emails found in Firestore to send alert');
-        }
-      } catch (emailErr) {
-        console.error('❌ Failed to send alert email:', emailErr.message);
-      }
-    }
-
     res.json({ message: 'Failed login recorded', failCount });
   } catch (err) {
-    console.error("❌ Error in /failed-login:", err.stack);
-    res.status(500).json({ message: 'Error recording failed login', error: err.message });
+    console.error('❌ Failed login logging failed:', err);
+    res.status(500).json({ message: 'Error recording failed login', error: err });
   }
 });
 
-// ===== GET /failed-login - Debug route =====
-app.get('/failed-login', (req, res) => {
-  res.json({ message: '✅ failed-login API is working' });
-});
-
-// ===== GET /logs =====
+// ===== GET /logs - Retrieve all access logs =====
 app.get('/logs', async (req, res) => {
   try {
-    const logs = await AccessLog.find().sort({ timestamp: -1 }).limit(50);
+    const logs = await AccessLog.find().sort({ timestamp: -1 });
     res.json(logs);
   } catch (err) {
-    console.error("❌ Error retrieving logs:", err.stack);
-    res.status(500).json({ message: 'Error retrieving logs', error: err.message });
+    res.status(500).json({ message: 'Error retrieving logs', error: err });
   }
 });
 
-// ===== GET /get-ip =====
+// ===== GET /get-ip - Retrieve client IP address =====
 app.get('/get-ip', (req, res) => {
   res.json({ ip: getClientIp(req) });
 });
 
 // ===== Start server =====
 app.listen(PORT, () => {
-  console.log(`✅ FYP Server running on port ${PORT}`);
+  console.log(`✅ FYP Server is running on http://localhost:${PORT}`);
 });
+

@@ -8,13 +8,10 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-
-// ✅ 让 Express 信任 Render 的反向代理头
 app.set('trust proxy', true);
-
 app.use(cors());
-app.use(bodyParser.json());
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 // ===== MongoDB connection =====
 const mongoURI = process.env.MONGO_URI || 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI)
@@ -55,19 +52,20 @@ function getClientIp(req) {
 // ===== Resend Init =====
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ===== Firebase Admin SDK Init (Render 环境可用) =====
-// 把 Firebase 服务账号 JSON 存到 Render 环境变量 FIREBASE_SERVICE_ACCOUNT_JSON
+// ===== Firebase Admin SDK Init  =====
 let serviceAccount;
 try {
   serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  if (!serviceAccount.private_key) throw new Error('private_key missing');
 } catch (err) {
   console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:", err.message);
+  process.exit(1); 
 }
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
-const firestore = admin.firestore();
+
 
 // ===== POST /logs =====
 app.post('/logs', async (req, res) => {

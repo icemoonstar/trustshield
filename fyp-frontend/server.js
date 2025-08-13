@@ -2,7 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+
 const { Resend } = require('resend'); // ✅ Resend SDK
 const admin = require('firebase-admin'); // ✅ Firestore Admin SDK
 require('dotenv').config();

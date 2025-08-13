@@ -3,6 +3,28 @@
   "name": "fyp-frontend",
   "version": "1.0.0",
   "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icemoonstar/fyp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/icemoonstar/fyp/issues"
+  },
+  "homepage": "https://github.com/icemoonstar/fyp#readme",
+  "description": "",
+=======
+<<<<<<< HEAD
+  "name": "fyp-frontend",
+  "version": "1.0.0",
+  "main": "server.js",
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   "dependencies": {
     "abort-controller": "^3.0.0",
     "accepts": "^2.0.0",
@@ -14,7 +36,10 @@
     "asynckit": "^0.4.0",
     "base64-js": "^1.5.1",
     "bignumber.js": "^9.3.1",
+<<<<<<< HEAD
+=======
     "body-parser": "^2.2.0",
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
     "bson": "^6.10.4",
     "buffer-equal-constant-time": "^1.0.1",
     "bytes": "^3.1.2",
@@ -182,6 +207,9 @@
     "yargs": "^17.7.2",
     "yargs-parser": "^21.1.1",
     "yocto-queue": "^0.1.0"
+<<<<<<< HEAD
+  }
+=======
   },
 =======
   "name": "fyp-folder",
@@ -218,4 +246,5 @@
     "mongoose": "^8.16.0"
   }
 >>>>>>> ae8088eda9f87c0f793af21a3511795ddd80c443
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
 }

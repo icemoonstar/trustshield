@@ -142,9 +142,17 @@
 <body>
   <div class="container">
     <img src="./TrustShield.png" alt="TrustShield Logo" class="logo">
+<<<<<<< HEAD
+    <h1>Register Account11111</h1>                         
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="name" placeholder="Full Name">
+    <input type="text" id="phone" placeholder="Phone Number">
+=======
     <h1>Register Account</h1>                         
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
     <button onclick="register()">Register</button>
     <p id="status"></p>
     <p>Already have an account? <a href="login.html">Login here</a></p>
@@ -170,7 +178,13 @@
       return pattern.test(password);
     }
 
+<<<<<<< HEAD
+   function register() {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+=======
     function register() {
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
@@ -185,7 +199,14 @@
           cred.user.sendEmailVerification();
           return db.collection("users").doc(cred.user.uid).set({
             email: email,
+<<<<<<< HEAD
+            name: name,
+            phone: phone,
+            role: "user",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+=======
             role: "user"
+>>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
           });
         })
         .then(() => {

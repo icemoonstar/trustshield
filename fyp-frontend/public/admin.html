@@ -4,11 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard - TrustShield</title>
-<<<<<<< HEAD
+
   <link rel="icon" type="image/png" href="./TrustShield.png">
-=======
   <link rel="icon" type="image/png" href="assets/favicon.png" />
->>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -26,11 +25,11 @@
     animation: fadeIn 1.2s ease-in;
   }
 
-  @keyframes fadeIn {
+    @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-
+  
   .dashboard {
     background: #fff;
     padding: 30px;
@@ -84,7 +83,7 @@
     background: #111a3d;
   }
 
-<<<<<<< HEAD
+
   .top-buttons {
   display: flex;
   justify-content: flex-end;
@@ -93,8 +92,6 @@
   }
 
 
-=======
->>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
   .table-container {
     overflow-x: auto;
     width: 100%;
@@ -156,17 +153,16 @@
 </head>
 <body>
   <div class="dashboard">
-<<<<<<< HEAD
+
     <div class="top-buttons">
       <button id="profileBtn">Go to My Profile</button>
       <button id="logoutBtn">Logout</button>
     </div>
     <h1>Admin Dashboard</h1>
-=======
     <button id="logoutBtn">Logout</button>
     <h1>Admin Dashboard</h1>
 
->>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
+
     <div class="section">
       <h2>All Users</h2>
       <div class="search-bar">
@@ -179,7 +175,7 @@
         </table>
       </div>
 
-<<<<<<< HEAD
+
       <div class="section">
         <h2>Access Logs</h2>
           <div class="search-bar">
@@ -194,7 +190,6 @@
               <tbody></tbody>
             </table>
           </div>
-=======
     <div class="section">
       <h2>Access Logs</h2>
       <div class="search-bar">
@@ -207,7 +202,7 @@
           <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Result</th></tr></thead>
           <tbody id="logTableBody"></tbody>
         </table>
->>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
+
       </div>
     </div>
   </div>
@@ -283,7 +278,7 @@
     }
 
     function renderLogs() {
-<<<<<<< HEAD
+
         const emailKeyword = document.getElementById("logSearchEmail").value.toLowerCase();
         const dateFilter = document.getElementById("logSearchDate").value;
         const logTable = document.getElementById("logTableBody");
@@ -324,7 +319,6 @@
       }
 
 
-=======
       const logTable = document.getElementById("logTableBody");
       logTable.innerHTML = "";
 
@@ -365,8 +359,7 @@
 
         logTable.appendChild(row);
       });
-    }
->>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
+
         function renderChart() {
       const resultCounts = { success: 0, failed: 0 };  // <- use 'failed'
       allLogs.forEach(log => {
@@ -411,7 +404,7 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
   renderLogs();
   renderChart();  
     });
-<<<<<<< HEAD
+
 
     document.getElementById("logSearchEmail").addEventListener("input", renderLogs);
     document.getElementById("logSearchDate").addEventListener("change", renderLogs);
@@ -421,11 +414,10 @@ document.getElementById("logSearchDate").addEventListener("change", () => {
     document.getElementById('profileBtn').addEventListener('click', () => {
     window.location.href = '/profile.html'; 
     });
-=======
     document.getElementById("logoutBtn").addEventListener("click", () => {
       signOut(auth).then(() => location.href = 'login.html');
     });
->>>>>>> 470fcea682ee80023058bc56ab3c6aa360a01d16
+
   </script>
 </body>
 </html>

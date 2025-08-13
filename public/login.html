@@ -346,7 +346,7 @@
             } catch (err) {
                 // Log to /logs
                 try { 
-                    await logAccess(emailValue, 'failed'); 
+                    await logAccess(email, 'failed');
                 } catch (e) {
                     console.error("Error logging to /logs:", e);
                 }

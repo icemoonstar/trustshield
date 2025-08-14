@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 4000;
 
 app.set('trust proxy', true);
 app.use(cors());
-app.use(bodyParser.json());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ===== MongoDB connection =====
 const mongoURI = process.env.MONGO_URI || 'mongodb+srv://fypadmin:fyp123456@cluster0.icunsh3.mongodb.net/trustshield?retryWrites=true&w=majority&appName=Cluster0';

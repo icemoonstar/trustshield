@@ -67,7 +67,7 @@ try {
   }
 } catch (err) {
   console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON:", err.message);
-    process.exit(1);
+  process.exit(1);
 }
 
 admin.initializeApp({
@@ -85,6 +85,7 @@ app.post('/logs', async (req, res) => {
       return res.status(400).json({ message: 'Email and result are required' });
     }
 
+    // Save access log to MongoDB and Firestore
     await new AccessLog({ email, ip, result }).save();
     await firestore.collection("logs").add({
       email, ip, result, timestamp: new Date()
@@ -109,13 +110,13 @@ app.post('/failed-login', async (req, res) => {
     }
     email = email.trim();
 
-    // 记录失败登录
+    // Record failed login attempt
     await new FailedLogin({ email, ip }).save();
     await firestore.collection("logs").add({
       email, ip, result: "failed", timestamp: new Date()
     });
 
-    // 统计最近 10 分钟失败次数
+    // Count failed attempts in last 10 minutes
     const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
     const failCount = await FailedLogin.countDocuments({
       email, timestamp: { $gte: tenMinsAgo }
@@ -123,13 +124,13 @@ app.post('/failed-login', async (req, res) => {
 
     console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
 
-    // 阈值设置为 3 次
+    // Threshold set to 3 failed attempts
     const threshold = 3;
     if (failCount >= threshold) {
-      const alertMessage = `登录失败超过 ${threshold} 次`;
+      const alertMessage = `Failed login exceeded ${threshold} times`;
       console.warn(`⚠️ [IDS ALERT] ${email} - ${alertMessage}`);
 
-      // 写入 MongoDB Alert 集合
+      // Save alert to MongoDB and Firestore
       await new Alert({ email, ip, message: alertMessage }).save();
       await firestore.collection("alerts").add({ email, ip, message: alertMessage, timestamp: new Date() });
     }

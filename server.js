@@ -3,7 +3,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const admin = require('firebase-admin');
-//const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
@@ -35,6 +34,14 @@ const failedLoginSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 const FailedLogin = mongoose.model('FailedLogin', failedLoginSchema);
+
+const alertSchema = new mongoose.Schema({
+  email: String,
+  ip: String,
+  message: String,
+  timestamp: { type: Date, default: Date.now }
+});
+const Alert = mongoose.model('Alert', alertSchema);
 
 // ===== Helper: Get client IP =====
 function getClientIp(req) {
@@ -93,28 +100,22 @@ app.post('/logs', async (req, res) => {
 
 // ===== POST /failed-login =====
 app.post('/failed-login', async (req, res) => {
-  console.log("📥 /failed-login POST request received");
-  console.log("📩 Request body:", req.body);
-
   try {
     let { email } = req.body;
     const ip = getClientIp(req);
-    console.log("📡 Detected IP:", ip);
 
     if (typeof email !== "string" || !email.trim()) {
-      console.warn("⚠️ Invalid email format received:", email);
       return res.status(400).json({ message: 'Invalid email format' });
     }
     email = email.trim();
 
+    // 记录失败登录
     await new FailedLogin({ email, ip }).save();
     await firestore.collection("logs").add({
       email, ip, result: "failed", timestamp: new Date()
     });
 
-    console.log(`✅ Saved failed login for ${email} (${ip})`);
-
-    // Count failed attempts in last 10 minutes
+    // 统计最近 10 分钟失败次数
     const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
     const failCount = await FailedLogin.countDocuments({
       email, timestamp: { $gte: tenMinsAgo }
@@ -122,10 +123,15 @@ app.post('/failed-login', async (req, res) => {
 
     console.log(`⚠️ [IDS] ${email} failed attempts in last 10 mins: ${failCount}`);
 
-    // Alert admins replaced with simple console warning
+    // 阈值设置为 3 次
     const threshold = 3;
     if (failCount >= threshold) {
-      console.warn(`⚠️ [IDS ALERT] ${email} has failed ${failCount} logins in the last 10 minutes`);
+      const alertMessage = `登录失败超过 ${threshold} 次`;
+      console.warn(`⚠️ [IDS ALERT] ${email} - ${alertMessage}`);
+
+      // 写入 MongoDB Alert 集合
+      await new Alert({ email, ip, message: alertMessage }).save();
+      await firestore.collection("alerts").add({ email, ip, message: alertMessage, timestamp: new Date() });
     }
 
     res.json({ message: 'Failed login recorded', failCount });
@@ -135,9 +141,15 @@ app.post('/failed-login', async (req, res) => {
   }
 });
 
-// ===== GET /failed-login - Debug route =====
-app.get('/failed-login', (req, res) => {
-  res.json({ message: '✅ failed-login API is working' });
+// ===== GET /alerts =====
+app.get('/alerts', async (req, res) => {
+  try {
+    const alerts = await Alert.find().sort({ timestamp: -1 }).limit(50);
+    res.json(alerts);
+  } catch (err) {
+    console.error("❌ Error retrieving alerts:", err.stack);
+    res.status(500).json({ message: 'Error retrieving alerts', error: err.message });
+  }
 });
 
 // ===== GET /logs =====

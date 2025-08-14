@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard - TrustShield</title>
+
+  <!-- keep a single favicon reference -->
+  <link rel="icon" type="image/png" href="./TrustShield.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1d2b64, #f8cdda);
+      min-height: 100vh;
+      padding: 20px;
+      animation: fadeIn 1.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+      max-width: 900px;
+      margin: 40px auto;
+      animation: slideIn 0.8s ease-in-out;
+      border: 1px solid #ccc;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    h1 {
+      color: #1d2b64;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #1d2b64;
+      margin-top: 30px;
+      border-top: 1px solid #ccc;
+      padding-top: 20px;
+    }
+
+    .top-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px; 
+      margin-bottom: 20px;
+    }
+
+    button {
+      background: #1d2b64;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      float: right;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: #111a3d;
+      transform: translateY(-2px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+    }
+
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 12px; text-align: center; }
+    th { background-color: #1d2b64; color: white; }
+
+    input[type="text"], input[type="date"] {
+      padding: 8px 10px;
+      margin: 10px 0 15px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    #searchInput { width: 50%; }
+    #dateInput { margin-right: 15px; }
+
+    @media screen and (max-width: 600px) {
+      #searchInput, #dateInput { width: 100%; margin-right: 0; }
+      button { float: none; width: 100%; margin-top: 10px; }
+      table, th, td { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-buttons">
+      <button id="profileBtn">Go to My Profile</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+
+    <h1>Welcome to TrustShield</h1>
+
+    <label for="dateInput">Filter by Date:</label>
+    <input type="date" id="dateInput" />
+
+    <label for="searchInput">Search IP / Result:</label>
+    <input type="text" id="searchInput" placeholder="e.g. 127.0.0.1 or success" />
+
+    <h2>My Access Logs</h2>
+    <table id="logTable">
+      <thead><tr><th>Time</th><th>IP</th><th>Result</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+  // NOTE: Firestore imports removed — logs come from backend API now.
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtrbsrvFNkJ_QL94nz5aGlrbGexoab7lY",
+    authDomain: "firm-source-440003-a8.firebaseapp.com",
+    projectId: "firm-source-440003-a8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  let allLogs = [];
+  let currentUserEmail = '';
+
+  onAuthStateChanged(auth, user => {
+    if (!user) return location.href = 'login.html';
+    currentUserEmail = user.email || '';
+    loadAllLogs();
+  });
+
+  async function loadAllLogs() {
+    try {
+      const res = await fetch('https://trustshield.onrender.com/logs', { credentials: 'omit' });
+      const data = await res.json();
+
+      // backend returns ISO timestamps; normalize to Date
+      allLogs = (Array.isArray(data) ? data : []).map(log => ({
+        ...log,
+        timestamp: new Date(log.timestamp)
+      }));
+
+      filterAndDisplayLogs();
+    } catch (err) {
+      console.error('❌ Failed to load logs from backend:', err);
+      document.querySelector('#logTable tbody').innerHTML = '<tr><td colspan="3">Failed to load logs</td></tr>';
+    }
+  }
+
+  function filterAndDisplayLogs() {
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const dateValue = document.getElementById('dateInput').value; // yyyy-mm-dd
+
+    const filtered = allLogs
+      .filter(log => (log.email || '').toLowerCase() === currentUserEmail.toLowerCase()) // only my logs
+      .filter(log => {
+        const matchesKeyword = (String(log.ip || '')).toLowerCase().includes(keyword) ||
+                               (String(log.result || '')).toLowerCase().includes(keyword);
+
+        const ts = log.timestamp instanceof Date && !isNaN(log.timestamp) ? log.timestamp : null;
+        if (!ts) return false;
+
+        const matchesDate = !dateValue || ts.toISOString().slice(0,10) === dateValue;
+        return matchesKeyword && matchesDate;
+      })
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 20);
+
+    const tbody = document.querySelector('#logTable tbody');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="3">No logs found</td></tr>';
+      return;
+    }
+
+    let rows = '';
+    filtered.forEach(item => {
+      const timeStr = item.timestamp ? item.timestamp.toLocaleString() : '—';
+      const ipStr = item.ip && item.ip !== 'unknown' ? item.ip : '';
+      const resultStr = item.result || '';
+      rows += `<tr><td>${timeStr}</td><td>${ipStr}</td><td>${resultStr}</td></tr>`;
+    });
+    tbody.innerHTML = rows;
+  }
+
+  document.getElementById('searchInput').addEventListener('input', filterAndDisplayLogs);
+  document.getElementById('dateInput').addEventListener('change', filterAndDisplayLogs);
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    signOut(auth).then(() => (location.href = 'login.html'));
+  });
+
+  document.getElementById('profileBtn').addEventListener('click', () => {
+    location.href = 'profile.html';
+  });
+</script>
+</body>
+</html>

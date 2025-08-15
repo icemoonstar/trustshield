@@ -1,0 +1,51 @@
+Metadata-Version: 2.4
+Name: git-filter-repo
+Version: 0.1.dev12+g10a03d1
+Summary: Quickly rewrite git repository history
+Author-email: Elijah Newren <newren@gmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/newren/git-filter-repo
+Project-URL: Issues, https://github.com/newren/git-filter-repo/issues/
+Project-URL: Source, https://github.com/newren/git-filter-repo
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: COPYING
+License-File: COPYING.gpl
+License-File: COPYING.mit
+Dynamic: license-file
+
+﻿# TrustShield Project
+# TrustShield - Zero Trust Security System for E-commerce SMEs
+
+## Features
+- 🔐 Firebase Authentication with TOTP MFA
+- 🧑‍💻 RBAC (admin/user roles from PostgreSQL)
+- 📜 Access logs with IP tracking (stored in Firestore and MongoDB)
+- 🛡️ Suspicious behavior detection (coming soon)
+
+## Technologies Used
+- Frontend: HTML + CSS + JS
+- Backend: Node.js (Express)
+- Database: Firebase Firestore, MongoDB, PostgreSQL
+
+## How to Run
+1. Clone repo
+2. Run `npm install` in backend
+3. Add your Firebase credentials in `.env`
+4. Start server with `node server.js`
+5. Open `login.html` in browser
+...
